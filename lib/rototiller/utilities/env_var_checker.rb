@@ -1,4 +1,4 @@
-require_relative 'color_text'
+require 'rototiller/utilities/color_text'
 
 module EnvVar
 
@@ -24,7 +24,7 @@ module EnvVar
     end
     abort_message = 'Aborting Rake:'
     required_vars.each{ |v| abort_message << red_text("\nThe environment variable #{v.name} is required. #{v.message}")}
-    abort(abort_message) unless required_vars.empty?
+    raise abort_message unless required_vars.empty?
   end
 
   def set_default_value(var)

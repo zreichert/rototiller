@@ -1,4 +1,5 @@
-require '../../utilities/env_var_checker'
+require 'rototiller/utilities/env_var_checker'
+require 'rake'
 
 Rake::TaskManager.record_task_metadata = true
 
