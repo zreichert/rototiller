@@ -1,4 +1,4 @@
-require '../../rake/tasks/rototiller_task'
+require 'rototiller/rake/tasks/rototiller_task'
 
 module Rake
   module DSL

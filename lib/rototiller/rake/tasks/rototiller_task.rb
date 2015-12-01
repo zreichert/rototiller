@@ -1,5 +1,5 @@
-require '../../utilities/env_var_checker'
-require '../../rake/tasks/common_tasks'
+require 'rototiller/utilities/env_var_checker'
+require 'rototiller/rake/tasks/common_tasks'
 
 module Rake
   class RototillerTask < Task
