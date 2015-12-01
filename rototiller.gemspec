@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
   #Development dependencies
   s.add_development_dependency 'bundler', '~> 1.6'
   s.add_development_dependency 'pry', '~> 0.9.12'
-  s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec', '>= 3.0.0'
   s.add_development_dependency 'simplecov'
 

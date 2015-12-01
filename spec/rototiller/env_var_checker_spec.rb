@@ -61,10 +61,10 @@ EOS
   end
 
   context 'Checking with and without defaults' do
-    
+    #TODO complete tests for EnvVar
   end
 
   context 'With and without defaults' do
-
+    #TODO complete tests for EnvVar
   end
 end

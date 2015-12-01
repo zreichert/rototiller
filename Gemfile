@@ -1,3 +1,3 @@
 source 'https://rubygems.org'
-# Specify your gem's dependencies in scooter.gemspec
+# Specify your gem's dependencies in rototiller.gemspec
 gemspec
