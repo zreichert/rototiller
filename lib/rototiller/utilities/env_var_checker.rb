@@ -10,16 +10,18 @@ module EnvVar
   def check_env_vars
     required_vars = []
     @@vars.each do |v|
-      if v.default_value
-        # check if set, then set default if no value present
-        yellow = yellow_text("WARNING: the variable #{v.name} is not set, proceeding with default value: ")
-        green = green_text(v.default_value)
-        puts yellow << green
-        set_default_value(v)
-      else
-        # var is required
-        # ad var to required_vars array if no value is set
-        required_vars.push(v) unless ENV[v.name]
+      unless ENV[v.name]
+        if v.default_value
+          # check if set, then set default if no value present
+          yellow = yellow_text("WARNING: the variable #{v.name} is not set, proceeding with default value: ")
+          green = green_text(v.default_value)
+          puts yellow << green
+          set_default_value(v)
+        else
+          # var is required
+          # ad var to required_vars array if no value is set
+          required_vars.push(v) unless ENV[v.name]
+        end
       end
     end
     abort_message = 'Aborting Rake:'

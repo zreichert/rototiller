@@ -1,0 +1,61 @@
+lib = File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+# This is a demo rake file
+
+require 'rototiller'
+
+# This task uses the default description
+#desc 'A task built with RototillerTask'
+Rototiller::Task::RototillerTask.define_task :demo do |t|
+  t.framework = 'beaker'
+  t.track_env_var('THUNDERCATS', 'the description of test', 'DEFAULT VALUE')
+  t.tests = '/will/this/work'
+end
+
+#using the Beaker Task by itself
+desc 'using the beaker task by itself'
+Rototiller::Task::BeakerTask.define_task :demo2 do |t|
+  t.tests = '/path/to/tests'
+end
+
+# using the DSL extension
+desc 'This task was built with the DSL extension'
+acceptance_task do |t|
+  # track some environment variables needed for testing
+  t.track_env_var('HEMAN', 'the description of FOO', 'DEFAULT VALUE')
+  t.track_env_var('VULTRON', 'the description of VULTRON', 'DEFAULT VALUE')
+
+  # specify the framework
+  t.framework = 'beaker'
+
+  # test info specified with dot notation
+  t.xml = true
+  t.tests = '/path/to/tests'
+  t.preserve_hosts = 'never'
+  t.pre_suite = 'path/to/pre_suite'
+end
+
+desc 'A variable that is set before you rake will not report if you track it'
+Rototiller::Task::RototillerTask.define_task :demo3 do |t|
+  t.framework = 'beaker'
+
+  # this should be set and will not report when you rake
+  t.track_env_var('HOME', 'the description of HOME', 'DEFAULT VALUE')
+end
+
+desc 'This task will fail, because of required variable that is not set'
+Rototiller::Task::RototillerTask.define_task :demo4 do |t|
+  # track some environment variables needed for testing
+  t.track_env_var('HEMAN', 'the description of FOO', 'DEFAULT VALUE')
+  t.track_env_var('REQUIRED', 'Required is VERY important, you must provide it')
+  t.track_env_var('VULTRON', 'the description of VULTRON', 'DEFAULT VALUE')
+
+  # specify the framework
+  t.framework = 'beaker'
+
+  # test info specified with dot notation
+  t.xml = true
+  t.tests = '/path/to/tests'
+  t.preserve_hosts = 'never'
+  t.pre_suite = 'path/to/pre_suite'
+end
