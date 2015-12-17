@@ -28,6 +28,8 @@ module Rototiller
         define(args, &task_block)
       end
 
+      # define_task is included to allow task to work like Rake::Task
+      # using .define_task or .new is appropriate
       def self.define_task(*args, &task_block)
         self.new(*args, &task_block)
       end
@@ -55,6 +57,8 @@ module Rototiller
       private
 
       def define(args, &task_block)
+        # Default task description
+        # can be overridden with 'desc' method
         desc "A Rototiller Task" unless ::Rake.application.last_comment
 
         task(@name, *args) do |_, task_args|

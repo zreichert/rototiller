@@ -23,6 +23,8 @@ module Rototiller
         define(args, &task_block)
       end
 
+      # define_task is included to allow task to work like Rake::Task
+      # using .define_task or .new is appropriate
       def self.define_task(*args, &task_block)
         self.new(*args, &task_block)
       end
@@ -38,9 +40,10 @@ module Rototiller
       private
 
       def define(args, &task_block)
+        # Default task description
+        # can be overridden with 'desc' method
         desc "A Beaker Task" unless ::Rake.application.last_comment
 
-        # ???? how does this work
         task(@name, *args) do |_, task_args|
           RakeFileUtils.__send__(:verbose, verbose) do
             task_block.call(*[self, task_args].slice(0, task_block.arity)) if task_block
@@ -50,8 +53,7 @@ module Rototiller
       end
 
       def beaker_command
-        # should we bundle here ?????
-        beaker = "bundle exec beaker "
+        beaker = "beaker "
         beaker += " --xml" if @xml
         beaker += " --debug" if @debug
         beaker += " --root-keys" if @root_keys
