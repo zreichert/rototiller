@@ -15,8 +15,6 @@ Gem::Specification.new do |s|
   s.files         = Dir['[A-Z]*[^~]'] + Dir['lib/**/*.rb'] + Dir['spec/*']
 
   #Development dependencies
-  s.add_development_dependency 'bundler', '~> 1.6'
-  s.add_development_dependency 'pry', '~> 0.9.12'
   s.add_development_dependency 'rspec', '>= 3.0.0'
   s.add_development_dependency 'simplecov'
 

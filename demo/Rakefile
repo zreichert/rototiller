@@ -14,7 +14,7 @@ end
 
 #using the Beaker Task by itself
 desc 'using the beaker task by itself'
-Rototiller::Task::BeakerTask.define_task :demo2 do |t|
+Rototiller::Task::Acceptancetask :demo2 do |t|
   t.tests = '/path/to/tests'
 end
 

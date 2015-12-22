@@ -1,7 +1,7 @@
 require 'rake'
 require 'rototiller/utilities/env_var_checker'
 require 'rototiller/task/check_env'
-require 'rototiller/task/beaker_task'
+require 'rototiller/task/acceptance_task'
 require 'rototiller/task/flags/cli_flags'
 
 module Rototiller
@@ -35,9 +35,8 @@ module Rototiller
       end
 
       def run_task
-
         if framework == 'beaker'
-          Rototiller::Task::BeakerTask.define_task :execute do |t|
+          Rototiller::Task::AcceptanceTask.define_task :execute do |t|
             @@cli_flag_names.each do |flag_name|
               flag_value = self.send(flag_name)
               t.send("#{flag_name}=", flag_value) if flag_value
