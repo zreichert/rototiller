@@ -8,7 +8,6 @@ module Rototiller
       # CLI flags are stored on a module and mixed in
       include CLIFlags
       include ::Rake::DSL if defined?(::Rake::DSL)
-      include EnvVar
 
       @@cli_flag_names.each do |flag|
         attr_accessor flag
