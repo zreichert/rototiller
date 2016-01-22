@@ -1,5 +1,7 @@
 require 'spec_helper'
 require 'stringio'
+require 'rototiller/task/flags/cli_flags'
+require 'rototiller/task/acceptance_task'
 
 module Rototiller::Task
   include CLIFlags
