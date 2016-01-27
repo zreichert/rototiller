@@ -12,7 +12,6 @@ module Rototiller
       end
 
       include ::Rake::DSL if defined?(::Rake::DSL)
-      include EnvVar
 
       def initialize(*args, &task_block)
         @name          = args.shift

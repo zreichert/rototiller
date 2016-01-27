@@ -1,4 +1,4 @@
-require 'rototiller/utilities/env_var_checker'
+require 'rototiller/utilities/env_var'
 require 'rake/tasklib'
 
 module Rototiller
