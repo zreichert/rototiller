@@ -93,6 +93,7 @@ module Rototiller::Task
           task.__send__(:set_verbose,verbose)
         end
         it 'prints command failed' do
+          pending
           expect(task).to receive(:exit).with(127)
 
           silence_output do
