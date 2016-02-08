@@ -5,8 +5,17 @@ class EnvVar
   include ColorText
 
   attr_accessor :var, :message, :default
-  attr_reader :message_level, :stop
 
+  # @return [Symbol] the debug level of the message, ':warning', ':error', ':info'
+  attr_reader :message_level
+
+  # @return [true, nil] if the state of the EnvVar requires the task to stop
+  attr_reader :stop
+
+  # Creates a new instance of EnvVar, holds information about the ENV in the environment
+  # @param var [String] the ENV in the environment, 'HOME'
+  # @param message [String] the message describing the ENV
+  # @param default [String] the value to use as the default if the ENV is not present
   def initialize(var, message, default=false)
     @var = var
     @message = message
@@ -14,10 +23,14 @@ class EnvVar
     set_message_level
   end
 
+  # The value of the ENV determined by the EnvVar class
+  # @return [String] the value determined by the EnvVar class
   def value
     ENV[@var] || @default
   end
 
+  # The formatted message to be displayed to the user
+  # @return [String] the EnvVar's message, formatted for color and meaningful to the state of the EnvVAr
   def message
     if message_level == :error
       red_text("The ENV #{@var} is required, #{@message}")
