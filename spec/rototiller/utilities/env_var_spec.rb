@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe EnvVar do
 
@@ -23,7 +22,7 @@ describe EnvVar do
               @var_value = var_env_value
             else
               ENV[var_name] = nil
-              @var_value = method_signature == 'with_default' ? var_default : nil
+              @var_value = method_signature == 'with_default' ? var_default : false
             end
 
             args = [var_name, var_message]
@@ -31,18 +30,20 @@ describe EnvVar do
             @env_var = EnvVar.new(*args)
 
             @expected_var_default = var_default
-            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV not set')
-            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV set')
+            @expected_var_default = false if (method_signature == 'without_default' && env_set == 'ENV not set')
+            @expected_var_default = false if (method_signature == 'without_default' && env_set == 'ENV set')
 
             # validation
             if (method_signature == 'with_default' && env_set == 'ENV not set')
-              @formatted_message = "\e[33mWARNING: the ENV #{var_name} is not set, proceeding with default value: \e[0m\e[32m#{var_default}\e[0m"
-            elsif (method_signature == 'with_default' && env_set == 'ENV set')
-              @formatted_message = "\e[32mThe ENV #{var_name} is being used with the value #{var_env_value} from the environment\e[0m"
+              @formatted_message = "\e[33mWARNING: the ENV #{var_name} is not set, proceeding with default value: #{var_default}\e[0m"
+              @expected_stop = nil
             elsif (method_signature == 'without_default' && env_set == 'ENV not set')
               @formatted_message = "\e[31mThe ENV #{var_name} is required, #{var_message}\e[0m"
-            elsif (method_signature == 'without_default' && env_set == 'ENV set')
+              @expected_stop = true
+            #elsif (method_signature == 'without_default' && env_set == 'ENV set')
+            elsif (env_set == 'ENV set')
               @formatted_message = "\e[32mThe ENV #{var_name} was found in the environment with the value #{var_env_value}\e[0m"
+              @expected_stop = nil
             end
 
 
@@ -73,6 +74,13 @@ describe EnvVar do
 
             it 'returns the default value' do
               expect(@env_var.default).to eq(@expected_var_default)
+            end
+          end
+
+          describe '.stop' do
+
+            it 'knows if it should stop' do
+              expect(@env_var.stop).to eq(@expected_stop)
             end
           end
         end
