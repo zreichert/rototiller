@@ -9,14 +9,15 @@ class ParamCollection
 
   def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect
 
-  # a class to collect and check a tasks params
-  # EnvVar or Flag
+  # collect a given task's params
   def initialize
     @argument_error = 'Argument can not be of class'
     @allowed_contents = [EnvVar, Flag]
     @collection = []
   end
 
+  # push a param or params into the ParamCollection
+  # @param args [EnvVar, Flag] an instance of the EnvVar or Flag class
   def push_params(*args)
 
     # Only allows classes inside @allowed_contents to be pushed
@@ -32,6 +33,16 @@ class ParamCollection
     @collection.push(*args)
   end
 
+  # format the messages inside this ParamCollection
+  # @param [Hash] filters any method from EnvVar can be used as a key
+  # @option filters [String, false, true] :stop the value of the return from .stop on EnvVar
+  # @option filters [String, false, true] :message_level the value of the return from .message_level on EnvVar
+  # @option filters [String, false, true] :default the value of the return from .default on EnvVar
+  # @option filters [String, false, true] :message the value of the return from .message on EnvVar
+  # @option filters [String, false, true] :var the value of the return from .var on EnvVar
+  # @return [String] messages from the contents of this ParamCollection, formatted with new lines and color
+  # @example Get the messages where :stop is true & :message_level is :warning
+    'format_message({:stop => true, :message_level => :warning})'
   def format_messages(filters=nil)
     # Example use
     # format_message({:stop => true, :message_level => :warning})
@@ -55,6 +66,8 @@ class ParamCollection
     filtered
   end
 
+  # Do any of the contents of this ParamCollection require the task to stop
+  # @return [true, nil] should the values of this ParamCollection stop the task
   def stop?
     # do any of the contents require the task to stop?
     @collection.any?{ |param| param.stop }
