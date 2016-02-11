@@ -1,4 +1,4 @@
-require 'rototiller/utilities/flag'
+require 'rototiller/utilities/command_flag'
 require 'rototiller/utilities/env_var'
 require 'forwardable'
 
@@ -12,7 +12,7 @@ class ParamCollection
   # collect a given task's params
   def initialize
     @argument_error = 'Argument can not be of class'
-    @allowed_contents = [EnvVar, Flag]
+    @allowed_contents = [EnvVar, CommandFlag]
     @collection = []
   end
 
