@@ -1,5 +1,7 @@
 require 'rototiller/utilities/env_var'
 require 'rototiller/utilities/param_collection'
+require 'rototiller/utilities/env_collection'
+require 'rototiller/utilities/flag_collection'
 require 'rake/tasklib'
 
 module Rototiller
