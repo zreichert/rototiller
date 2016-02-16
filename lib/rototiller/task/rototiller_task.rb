@@ -23,8 +23,8 @@ module Rototiller
         @command       = 'echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.'
         # rake's in-task implied method is true when using --verbose
         @verbose       = verbose == true
-        @env_vars      = []
-        @flags         = []
+        @env_vars      = EnvCollection.new
+        @flags         = FlagCollection.new
 
         define(args, &task_block)
       end
@@ -35,19 +35,29 @@ module Rototiller
         self.new(*args, &task_block)
       end
 
-      def add_env(env_vars)
-        (@env_vars << env_vars).flatten!
+      #TODO add arg validation to EnvVar and CommandFlag
+      # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
+      # add_env('FOO', 'This is how you use FOO', 'default_value')
+      def add_env(*args)
+        args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
       end
 
-      def add_flag(flag)
-        (@flags << flag).flatten!
+      #TODO add arg validation to CommandFlag
+      # add_flag(CommandFlag.new(), CommandFlag.new(), CommandFlag.new())
+      # add_flag('--foo', 'This is how you use --foo', 'default_value')
+      def add_flag(*args)
+        args.all?{ |arg| arg.is_a?(CommandFlag)} ? @flags.push(*flags) : @flags.push(CommandFlag.new(*args))
       end
 
       private
 
       # @private
       def run_task
-        command_str = @command + ' ' + @flags.join(' ')
+        puts @flags.format_messages
+        puts @env_vars.format_messages
+        exit if @env_vars.stop?
+
+        command_str = @command << @flags.to_s
         puts command_str if @verbose
 
         return if system(command_str)
