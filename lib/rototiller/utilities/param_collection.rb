@@ -1,4 +1,4 @@
-require 'rototiller/utilities/flag'
+require 'rototiller/utilities/command_flag'
 require 'rototiller/utilities/env_var'
 require 'forwardable'
 
@@ -7,30 +7,11 @@ class ParamCollection
   # This may be useful if we use individual ParamCollection objects for EnvVars and Flags
   extend Forwardable
 
-  def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect
+  def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :push
 
   # collect a given task's params
   def initialize
-    @argument_error = 'Argument can not be of class'
-    @allowed_contents = [EnvVar, Flag]
     @collection = []
-  end
-
-  # push a param or params into the ParamCollection
-  # @param args [EnvVar, Flag] an instance of the EnvVar or Flag class
-  def push_params(*args)
-
-    # Only allows classes inside @allowed_contents to be pushed
-    # behaves like push
-    # unlimited number of arguments allowed
-    args.each do |arg|
-      if @allowed_contents.none? { |klass| arg.is_a?(klass) }
-        @argument_error << arg.class.to_s
-        raise(ArgumentError, @argument_error)
-      end
-    end
-
-    @collection.push(*args)
   end
 
   # format the messages inside this ParamCollection
@@ -44,8 +25,7 @@ class ParamCollection
   # @example Get the messages where :stop is true & :message_level is :warning
     'format_message({:stop => true, :message_level => :warning})'
   def format_messages(filters=nil)
-    # Example use
-    # format_message({:stop => true, :message_level => :warning})
+
     formatted_message = String.new
     build_message = lambda { |param| formatted_message << param.message << "\n"}
     filters ? filter_contents(filters).each(&build_message) : @collection.each(&build_message)
@@ -53,25 +33,35 @@ class ParamCollection
   end
 
   def filter_contents(filters={})
+
     filtered = []
+
     @collection.each do |param|
+
       filtered.push(param) if filters.all? do |method, value|
-        if param.send(method) == nil
-          value == nil
-        else
-          param.send(method).to_s =~ /#{value.to_s}/
+
+        if param.respond_to?(method)
+          if param.send(method).nil?
+            value.nil?
+          else
+            param.send(method).to_s =~ /#{value.to_s}/
+          end
         end
       end
     end
     filtered
   end
 
-  # Do any of the contents of this ParamCollection require the task to stop
-  # @return [true, nil] should the values of this ParamCollection stop the task
-  def stop?
-    # do any of the contents require the task to stop?
-    @collection.any?{ |param| param.stop }
+  def check_classes(allowed_klass, *args)
+
+    args.each do |arg|
+
+      unless arg.is_a?(allowed_klass)
+        argument_error = "Argument was of class #{arg.class}, Can only be of class #{allowed_klass}"
+        raise(ArgumentError, argument_error)
+      end
+    end
   end
 
-  private :filter_contents
+  private :filter_contents, :check_classes
 end
