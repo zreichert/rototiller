@@ -93,8 +93,7 @@ module Rototiller::Task
           task.__send__(:set_verbose,verbose)
         end
         it 'prints command failed' do
-          pending
-          expect(task).to receive(:exit).with(127)
+          expect(task).to receive(:exit).with(2)
 
           silence_output do
             task.command = 'exit 2'
@@ -116,15 +115,21 @@ module Rototiller::Task
 
       context 'with flags' do
         it "renders cli for '#{init_method}' with one flag" do
-          task.command = 'nocommand'
-          task.add_flag('--yeshello')
-          expect(described_run_task).to receive(:system).with('nocommand --yeshello')
+          pending
+          silence_output do
+            task.command = 'nocommand'
+            task.add_flag('--yeshello', 'description')
+            expect(described_run_task).to receive(:system).with('nocommand --yeshello')
+          end
         end
         it "renders cli for '#{init_method}' with multiple flags" do
-          task.command = 'nocommand'
-          task.add_flag('--yeshello')
-          task.add_flag('-t')
-          expect(described_run_task).to receive(:system).with('nocommand --yeshello -t')
+          pending
+          silence_output do
+            task.command = 'nocommand'
+            task.add_flag('--yeshello', 'other description')
+            task.add_flag('-t', '-t description')
+            expect(described_run_task).to receive(:system).with('nocommand --yeshello -t')
+          end
         end
       end
     end
