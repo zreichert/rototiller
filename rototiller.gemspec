@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.files         = Dir['[A-Z]*[^~]'] + Dir['lib/**/*.rb'] + Dir['spec/*']
 
   #Development dependencies
-  s.add_development_dependency 'rspec', '>= 3.0.0'
+  s.add_development_dependency 'rspec', '~> 3.1.0'
   s.add_development_dependency 'simplecov'
 
   #Documentation dependencies
