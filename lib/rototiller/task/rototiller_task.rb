@@ -51,12 +51,15 @@ module Rototiller
 
       private
 
-      # @private
-      def run_task
+      def print_messages
         puts @flags.format_messages
         puts @env_vars.format_messages
         exit if @env_vars.stop?
+      end
 
+      # @private
+      def run_task
+        print_messages
         command_str = @command << @flags.to_s
         puts command_str if @verbose
 
@@ -75,7 +78,7 @@ module Rototiller
       def define(args, &task_block)
         # Default task description
         # can be overridden with standard 'desc' DSL method
-        desc "RototillerTask: A Task with optional environment variable and command flag tracking" unless ::Rake.application.last_comment
+        desc 'RototillerTask: A Task with optional environment variable and command flag tracking' unless ::Rake.application.last_comment
 
         task(@name, *args) do |_, task_args|
           RakeFileUtils.__send__(:verbose, @verbose) do

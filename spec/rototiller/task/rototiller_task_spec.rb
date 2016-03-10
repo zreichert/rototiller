@@ -80,11 +80,8 @@ module Rototiller::Task
       context 'with custom exit status' do
         it 'returns the correct status on exit', :slow do
           expect(task).to receive(:exit).with(2)
-
-          silence_output do
-            task.command = 'ruby -e "exit(2);" ;#'
-            described_run_task
-          end
+          task.command = 'ruby -e "exit(2);" ;#'
+          described_run_task
         end
       end
 
@@ -100,6 +97,10 @@ module Rototiller::Task
             expect(task).to receive(:exit).with(2)
           end
 
+          #FIXME: despite the silence_output some of these are spewing
+          #  this is because we set command to "echo empty RototillerTask. You should define a command, send a block, or EnvVar to track."
+          #  so any of these that run system spews that to the output.  We should probably not set that as the default command.  it's a bit verbose and pedantic.
+          #  it doesn't check if there are any envs or other tasks, and there are good reasons to not have a command, in some cases
           silence_output do
             task.command = 'exit 2'
             described_verbose(true)
@@ -109,32 +110,92 @@ module Rototiller::Task
         end
         it 'doesn\'t print if fail_on_error is false' do
           expect(task).to_not receive(:exit)
-
-          silence_output do
-            task.fail_on_error = false
-            task.command = 'exit 2'
-            expect { described_run_task }.to output("").to_stderr
-          end
+          task.fail_on_error = false
+          task.command = 'exit 2'
+          expect { described_run_task }.to output("").to_stderr
         end
       end
 
+      # TODO: reduce repetition
       context 'with flags' do
+        let(:command) {'nonesuch'}
+        let(:flag1) {'--flagoner'}
         it "renders cli for '#{init_method}' with one flag" do
-          pending
+          task.command = command
+          task.add_flag(flag1, 'description')
+          expect(task).to receive(:system).with("#{command} #{flag1}").and_return(true)
           silence_output do
-            task.command = 'nocommand'
-            task.add_flag('--yeshello', 'description')
-            expect(described_run_task).to receive(:system).with('nocommand --yeshello')
+            described_run_task
           end
         end
         it "renders cli for '#{init_method}' with multiple flags" do
-          pending
+          task.command = command
+          task.add_flag(flag1, 'other description')
+          task.add_flag('-t', '-t description', 'tvalue')
+          expect(task).to receive(:system).with("#{command} #{flag1} -t -t description").and_return(true)
           silence_output do
-            task.command = 'nocommand'
-            task.add_flag('--yeshello', 'other description')
-            task.add_flag('-t', '-t description')
-            expect(described_run_task).to receive(:system).with('nocommand --yeshello -t')
+            described_run_task
           end
+        end
+        it "prints messages for '#{init_method}' with single nonvalue CLI flag" do
+          task.add_flag('-t', '-t description')
+          expect{ described_run_task }
+            .to output(/CLI flag -t will be used, no value was provided/)
+            .to_stdout
+        end
+        it "prints messages for '#{init_method}' with single value CLI flag" do
+          task.add_flag('-t', '-t description', 'tvalue2')
+          expect{ described_run_task }
+            .to output(/CLI flag -t will be used with value -t description/)
+            .to_stdout
+        end
+        it "raises argument error for too many flag args" do
+          expect{ task.add_flag('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
+        end
+      end
+      context 'with env vars' do
+      # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
+      # add_env('FOO', 'This is how you use FOO', 'default_value')
+        #def initialize(var, message, default=false)
+        let(:env_name) {'VAR'}
+        let(:env_desc) {'used in some task for some purpose'}
+        let(:env_default) {'default_value'}
+        it "prints error about missing environment variable created via EnvVar.new()" do
+          task.add_env(EnvVar.new(env_name, env_desc))
+          expect(task).to receive(:exit)
+          expect{ described_run_task }
+            .to output(/The ENV #{env_name} is required, #{env_desc}/)
+            .to_stdout
+        end
+        it "prints description about missing environment variable with default created via EnvVar.new()" do
+          task.add_env(EnvVar.new(env_name, env_desc, env_default))
+          expect{ described_run_task }
+            .to output(/WARNING: the ENV #{env_name} is not set.*default value: used in some/)
+            .to_stdout
+        end
+        it "prints error about missing environment variable created via add_env" do
+          task.add_env(env_name, env_desc)
+          expect(task).to receive(:exit)
+          expect{ described_run_task }
+            .to output(/The ENV #{env_name} is required, #{env_desc}/)
+            .to_stdout
+        end
+        it "prints description about missing environment variable with default created via add_env" do
+          task.add_env(env_name, env_desc, env_default)
+          expect{ described_run_task }
+            .to output(/WARNING: the ENV #{env_name} is not set.*default value: used in some/)
+            .to_stdout
+        end
+        it "raises argument error for too many env string args" do
+          expect{ task.add_env('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
+        end
+        it "add_env can take 4 EnvVar args" do
+          task.add_env(EnvVar.new(env_name,env_desc),EnvVar.new('VAR2',env_desc),
+                       EnvVar.new('VAR3',  env_desc),EnvVar.new(env_name,env_desc))
+          expect(task).to receive(:exit)
+          expect{ described_run_task }
+            .to output(/The ENV #{env_name} is required, #{env_desc}.*VAR2.*#{env_desc}.*#{env_name}/m)
+            .to_stdout
         end
       end
     end
