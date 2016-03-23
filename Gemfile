@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 group :system_tests do
   #gem 'beaker', :path => "../../beaker/"
   gem 'beaker', '~> 2.22.0'
+  gem 'beaker-hostgenerator'
 end
 
 local_gemfile = "#{__FILE__}.local"
