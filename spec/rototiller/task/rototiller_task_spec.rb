@@ -93,7 +93,12 @@ module Rototiller::Task
           task.__send__(:set_verbose,verbose)
         end
         it 'prints command failed' do
-          expect(task).to receive(:exit).with(2)
+          # argh!  (facepalm)
+          if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.0.0')
+            expect(task).to receive(:exit).with(127)
+          else
+            expect(task).to receive(:exit).with(2)
+          end
 
           silence_output do
             task.command = 'exit 2'
