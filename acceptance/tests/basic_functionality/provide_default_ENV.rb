@@ -24,7 +24,7 @@ $LOAD_PATH.unshift('/root/rototiller/lib')
 require 'rototiller'
 
 Rototiller::Task::RototillerTask.define_task :#{task_name} do |t|
-  t.add_env('#{env_name}', '#{env_description}', '#{env_value}')
+  t.add_env('#{env_name}', '#{env_value}', '#{env_description}')
   t.command = "#{test_command}"
 end
 EOS
