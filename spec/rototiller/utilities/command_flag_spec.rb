@@ -12,7 +12,7 @@ describe CommandFlag do
 
     it 'should work with correct arguments' do
       expect{subject.new(flag, message)}.not_to raise_error
-      expect{subject.new(flag, message, value)}.not_to raise_error
+      expect{subject.new(flag, value, message)}.not_to raise_error
     end
 
     it 'should not with incorrect arguments' do
@@ -67,7 +67,7 @@ describe CommandFlag do
 
     context 'value provided' do
 
-      let(:args) { [flag, message, value] }
+      let(:args) { [flag, value, message] }
 
       it_behaves_like 'a Command Flag object'
 

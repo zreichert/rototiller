@@ -16,7 +16,7 @@ class EnvVar
   # @param var [String] the ENV in the environment, 'HOME'
   # @param message [String] the message describing the ENV
   # @param default [String] the value to use as the default if the ENV is not present
-  def initialize(var, message, default=false)
+  def initialize(var, default=false, message)
     @var = var
     @message = message
     @default = default

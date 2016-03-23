@@ -14,7 +14,7 @@ class CommandFlag
   # @param flag [String] the flag to be set on a CLI '-v' or '--verbose'
   # @param message [String] the message describing the Flag
   # @param value [String] the value to use as the value if one is required
-  def initialize(flag, message, value=nil)
+  def initialize(flag, value=nil, message)
     @flag = flag
     @message = message
     @value = value

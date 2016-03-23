@@ -26,7 +26,7 @@ describe EnvVar do
             end
 
             args = [var_name, var_message]
-            args << var_default if method_signature == 'with_default'
+            args.insert(1, var_default) if method_signature == 'with_default'
             @env_var = EnvVar.new(*args)
 
             @expected_var_default = var_default
