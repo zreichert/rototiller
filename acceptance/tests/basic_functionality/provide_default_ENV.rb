@@ -6,12 +6,12 @@ env_name = 'FOOBAR'
 env_value = 'foobaz'
 env_description = "This is a helpful description of #{env_name}"
 
-command_output = "The value of #{env_name} is #{env_value}"
-test_command = "echo '#{command_output}'"
+test_command = "printenv"
 
 sut = find_only_one('agent')
 
 rototiller_output_regex = /WARNING: the ENV #{env_name} is not set, proceeding with default value: #{env_value}/
+command_regex = /#{env_name}=#{env_value}/
 
 teardown do
 
@@ -43,5 +43,5 @@ on(sut, "rake #{task_name}", :accept_all_exit_codes => true) do |result|
   assert_match(rototiller_output_regex, result.stdout, 'The expected messaging was not observed')
 
   # Use test command output to validate value of ENV used by task
-  assert_match(/#{command_output}/, result.stdout, 'The observed value of the ENV was different than expected')
+  assert_match(command_regex, result.stdout, 'The observed value of the ENV was different than expected')
 end

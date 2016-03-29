@@ -16,17 +16,12 @@ class EnvVar
   # @param var [String] the ENV in the environment, 'HOME'
   # @param message [String] the message describing the ENV
   # @param default [String] the value to use as the default if the ENV is not present
-  def initialize(var, default=false, message)
+  def initialize(var, default=nil, message)
     @var = var
     @message = message
     @default = default
     set_message_level
-  end
-
-  # The value of the ENV determined by the EnvVar class
-  # @return [String] the value determined by the EnvVar class
-  def value
-    ENV[@var] || @default
+    set_value
   end
 
   # The formatted message to be displayed to the user
@@ -35,13 +30,17 @@ class EnvVar
     if message_level == :error
       red_text("The ENV #{@var} is required, #{@message}")
     elsif message_level == :info
-      green_text("The ENV #{@var} was found in the environment with the value #{value}")
+      green_text("The ENV #{@var} was found in the environment with the value #{ENV[@var]}")
     elsif message_level == :warning
       yellow_text("WARNING: the ENV #{@var} is not set, proceeding with default value: #{@default}")
     end
   end
 
   private
+  def set_value
+    ENV[@var] = @default unless ENV[@var]
+  end
+
   def check
     ENV.key?(@var)
   end

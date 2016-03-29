@@ -30,8 +30,8 @@ describe EnvVar do
             @env_var = EnvVar.new(*args)
 
             @expected_var_default = var_default
-            @expected_var_default = false if (method_signature == 'without_default' && env_set == 'ENV not set')
-            @expected_var_default = false if (method_signature == 'without_default' && env_set == 'ENV set')
+            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV not set')
+            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV set')
 
             # validation
             if (method_signature == 'with_default' && env_set == 'ENV not set')
@@ -60,13 +60,6 @@ describe EnvVar do
 
             it 'returns the formatted message' do
               expect(@env_var.message).to eq(@formatted_message)
-            end
-          end
-
-          describe '.value' do
-
-            it 'returns the value of the ENV' do
-              expect(@env_var.value).to eq(@var_value)
             end
           end
 
