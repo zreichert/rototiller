@@ -60,8 +60,8 @@ describe ParamCollection do
       param_collection.push(*vars)
 
       [set_env_1_no_default, set_env_2_no_default].each do |var|
-        expected_message = /32mThe ENV #{var.var} was found in the environment with the value #{var.value}/
-        expect(param_collection.format_messages({:default => false, :message_level => :info})).to match(expected_message)
+        expected_message = /32mThe ENV #{var.var} was found in the environment with the value #{ENV[var.var]}/
+        expect(param_collection.format_messages({:default => nil, :message_level => :info})).to match(expected_message)
       end
     end
   end

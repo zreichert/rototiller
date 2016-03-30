@@ -157,7 +157,7 @@ module Rototiller::Task
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
         #def initialize(var, message, default=false)
-        let(:env_name) {'VAR'}
+        let(:env_name) {unique_env}
         let(:env_desc) {'used in some task for some purpose'}
         let(:env_default) {'default_value'}
         it "prints error about missing environment variable created via EnvVar.new()" do
@@ -181,9 +181,9 @@ module Rototiller::Task
             .to_stdout
         end
         it "prints description about missing environment variable with default created via add_env" do
-          task.add_env(env_name, env_desc, env_default)
+          task.add_env(env_name, env_default, env_desc)
           expect{ described_run_task }
-            .to output(/WARNING: the ENV #{env_name} is not set.*default value: used in some/)
+            .to output(/WARNING: the ENV #{env_name} is not set.*default value: #{env_default}/)
             .to_stdout
         end
         it "raises argument error for too many env string args" do
