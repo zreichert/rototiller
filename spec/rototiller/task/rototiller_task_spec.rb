@@ -123,33 +123,36 @@ module Rototiller::Task
       context 'with flags' do
         let(:command) {'nonesuch'}
         let(:flag1) {'--flagoner'}
+        let(:value) {'I am a value'}
         it "renders cli for '#{init_method}' with one flag" do
+          arg = {:name => flag1, :message => 'description', :value => value}
           task.command = command
-          task.add_flag(flag1, 'description')
-          expect(task).to receive(:system).with("#{command} #{flag1}").and_return(true)
+          task.add_flag(arg)
+          expect(task).to receive(:system).with("#{command} #{flag1} #{value}").and_return(true)
           silence_output do
             described_run_task
           end
         end
         it "renders cli for '#{init_method}' with multiple flags" do
           task.command = command
-          task.add_flag(flag1, 'other description')
-          task.add_flag('-t', '-t description', 'tvalue')
-          expect(task).to receive(:system).with("#{command} #{flag1} -t -t description").and_return(true)
+          task.add_flag({:name => flag1, :message => 'other description', :value => value})
+          task.add_flag({:name => '-t', :message => '-t description', :value => 'tvalue'})
+          expect(task).to receive(:system).with("#{command} #{flag1} #{value} -t tvalue").and_return(true)
           silence_output do
             described_run_task
           end
         end
         it "prints messages for '#{init_method}' with single nonvalue CLI flag" do
-          task.add_flag('-t', '-t description')
+          pending 'functionality temporarily disabled'
+          task.add_flag({:name => '-t', :message => '-t description'})
           expect{ described_run_task }
             .to output(/CLI flag -t will be used, no value was provided/)
             .to_stdout
         end
         it "prints messages for '#{init_method}' with single value CLI flag" do
-          task.add_flag('-t', '-t description', 'tvalue2')
+          task.add_flag({:name => '-t', :message =>  '-t description', :value =>  'tvalue2'})
           expect{ described_run_task }
-            .to output(/CLI flag -t will be used with value -t description/)
+            .to output(/-t description.*CLI flag -t will be used with value/m)
             .to_stdout
         end
         it "raises argument error for too many flag args" do
@@ -165,28 +168,32 @@ module Rototiller::Task
         let(:env_default) {'default_value'}
         let(:env_message_header) {"The environment variable: '#{env_name}'"}
         it "prints error about missing environment variable created via EnvVar.new()" do
-          task.add_env(EnvVar.new(env_name, env_desc))
+          task.add_env({:name => env_name, :message => env_desc})
           expect(task).to receive(:exit)
           expect{ described_run_task }
             .to output(/ERROR: #{env_message_header} is required: #{env_desc}/)
             .to_stdout
         end
         #TODO: add warning case
-        it "prints description about missing environment variable with default created via EnvVar.new()" do
-          task.add_env(EnvVar.new(env_name, env_default, env_desc))
+        it "prints description about missing environment variable with default created via block syntax" do
+          task.add_env do |env|
+            env.name = env_name
+            env.default = env_default
+            env.message = env_desc
+          end
           expect{ described_run_task }
             .to output(/INFO: #{env_message_header} was found with value: '#{env_default}': #{env_desc}/)
             .to_stdout
         end
         it "prints error about missing environment variable created via add_env" do
-          task.add_env(env_name, env_desc)
+          task.add_env({:name => env_name, :message => env_desc})
           expect(task).to receive(:exit)
           expect{ described_run_task }
             .to output(/ERROR: #{env_message_header} is required: #{env_desc}/)
             .to_stdout
         end
         it "prints description about missing environment variable with default created via add_env" do
-          task.add_env(env_name, env_default, env_desc)
+          task.add_env({:name => env_name,:default => env_default, :message => env_desc})
           expect{ described_run_task }
             .to output(/INFO: #{env_message_header} was found with value: '#{env_default}': #{env_desc}/)
             .to_stdout
@@ -197,8 +204,8 @@ module Rototiller::Task
           expect{ task.add_env('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
         end
         it "add_env can take 4 EnvVar args" do
-          task.add_env(EnvVar.new(env_name,env_desc),EnvVar.new('VAR2',env_desc),
-                       EnvVar.new('VAR3',  env_desc),EnvVar.new(env_name,env_desc))
+          task.add_env({:name => env_name, :message => env_desc},{:name => 'VAR2', :message => env_desc},
+                       {:name => 'VAR3',:message => env_desc},{:name => env_name,:message => env_desc})
           expect(task).to receive(:exit)
           expect{ described_run_task }
             .to output(/ERROR: #{env_message_header} is required: #{env_desc}.*VAR2.*VAR3.*#{env_name}/m)

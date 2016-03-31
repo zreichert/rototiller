@@ -2,6 +2,7 @@ require 'rototiller/utilities/env_var'
 require 'rototiller/utilities/param_collection'
 require 'rototiller/utilities/env_collection'
 require 'rototiller/utilities/flag_collection'
+require 'rototiller/utilities/command_flag'
 require 'rake/tasklib'
 
 module Rototiller
@@ -35,18 +36,32 @@ module Rototiller
         self.new(*args, &task_block)
       end
 
-      #TODO add arg validation to EnvVar and CommandFlag
-      # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
-      # add_env('FOO', 'default_value', 'This is how you use FOO')
-      def add_env(*args)
-        args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
+      # adds environment variables to be tracked
+      # @param [Hash] *args hashes of information about the environment variable
+      # @option args [String] :name The environment variable
+      # @option args [String] :default The default value for the environment variable
+      # @option args [String] :message A message describing the use of this variable
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods track hash keys
+      def add_env(*args,&block)
+        raise ArgumentError.new("add_env takes a block or a hash") if !args.empty? && block_given?
+        attributes = [:name, :default, :message]
+        add_param(@env_vars, EnvVar, attributes, args, &block)
       end
 
-      #TODO add arg validation to CommandFlag
-      # add_flag(CommandFlag.new(), CommandFlag.new(), CommandFlag.new())
-      # add_flag('--foo', 'This is how you use --foo', 'default_value')
-      def add_flag(*args)
-        args.all?{ |arg| arg.is_a?(CommandFlag)} ? @flags.push(*flags) : @flags.push(CommandFlag.new(*args))
+      # adds command line flags to be used in a command
+      # @param [Hash] *args hashes of information about the command line flag
+      # @option args [String] :name The command line flag
+      # @option args [String] :value The value for the command line flag
+      # @option args [String] :message A message describing the use of this command line flag
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about the command line flag, available methods track hash keys
+      def add_flag(*args, &block)
+        raise ArgumentError.new("add_flag takes a block or a hash") if !args.empty? && block_given?
+        attributes = [:name, :value, :message]
+        add_param(@flags, CommandFlag, attributes, args, &block)
       end
 
       private
@@ -93,6 +108,30 @@ module Rototiller
       #   for unit testing, we need a shortcut around rake's CLI --verbose
       def set_verbose(verbosity=true)
         @verbose = verbosity
+      end
+
+      def add_param(collection, param_class, param_array, args, &block)
+
+        if block_given?
+
+          block_syntax_obj = Object.new
+          block_syntax_obj.class.class_eval { param_array.each { |i| attr_accessor i } }
+
+          yield(block_syntax_obj)
+
+          # pull information out of the block_syntax_obj
+          param_hash = Hash.new
+          param_array.each{ |p| param_hash[p.to_sym] = block_syntax_obj.send(p)}
+
+          collection.push(param_class.new(param_hash))
+        else
+
+          args.each do |arg|
+
+            raise ArgumentError.new("Argument must ba a Hash not a #{arg.class}") unless arg.is_a?(Hash)
+            collection.push(param_class.new(arg))
+          end
+        end
       end
     end
   end

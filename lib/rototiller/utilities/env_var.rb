@@ -13,13 +13,15 @@ class EnvVar
   attr_reader :stop
 
   # Creates a new instance of EnvVar, holds information about the ENV in the environment
-  # @param var [String] the ENV in the environment, 'HOME'
-  # @param message [String] the message describing the ENV
-  # @param default [String] the value to use as the default if the ENV is not present
-  def initialize(var, default=nil, message)
-    @var = var
-    @message = message
-    @default = default
+  # @param [Hash] attribute_hash hash of information about the environment variable
+  # @option attribute_hash [String] :name The environment variable
+  # @option attribute_hash [String] :default The default value for the environment variable
+  # @option attribute_hash [String] :message A message describing the use of this variable
+  def initialize(attribute_hash)
+    raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
+    @var = attribute_hash[:name]
+    @message = attribute_hash[:message]
+    @default = attribute_hash[:default]
     set_message_level
     set_value
   end
