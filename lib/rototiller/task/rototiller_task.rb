@@ -38,8 +38,22 @@ module Rototiller
       #TODO add arg validation to EnvVar and CommandFlag
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
-      def add_env(*args)
-        args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
+      def add_env(*args, &block)
+        #args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
+        if block_given?
+          #require 'pry'; binding.pry
+          #add_param_methods
+          tmp_object = Object.new
+          class << tmp_object
+            [:name, :default, :message].each{ |i| attr_accessor i }
+          end
+
+          yield(tmp_object)
+          env = [tmp_object.name, tmp_object.default, tmp_object.message].compact
+          @env_vars.push(EnvVar.new(*env))
+        else
+          args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
+        end
       end
 
       #TODO add arg validation to CommandFlag
@@ -92,6 +106,12 @@ module Rototiller
       #   for unit testing, we need a shortcut around rake's CLI --verbose
       def set_verbose(verbosity=true)
         @verbose = verbosity
+      end
+
+      def add_param_methods
+        @attribute_params.each do |p|
+          self.send(:attr_accessor, p)
+        end
       end
     end
   end

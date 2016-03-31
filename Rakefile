@@ -1,5 +1,6 @@
 require "bundler/gem_tasks"
 require 'rspec/core/rake_task'
+require 'rototiller'
 
 task :default => :test
 
@@ -53,4 +54,12 @@ task :acceptance do |t, args|
   beaker += " --tests #{test_suite}" if test_suite != ''
   beaker += " #{opts}" if opts != ''
   sh beaker
+end
+
+Rototiller::Task::RototillerTask.define_task :block_syntax do |t|
+  t.add_env do |env|
+    env.default = 'foobar'
+    env.name = 'FOO'
+    env.message = 'This is your message'
+  end
 end
