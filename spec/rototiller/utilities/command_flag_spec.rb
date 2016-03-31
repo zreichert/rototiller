@@ -11,7 +11,7 @@ describe CommandFlag do
     subject   { CommandFlag }
 
     it 'should work with correct arguments' do
-      expect{subject.new({:name => flag, :value => value, :message => message})}.not_to raise_error
+      expect{subject.new({:name => flag, :default => value, :message => message})}.not_to raise_error
     end
   end
 
@@ -61,9 +61,9 @@ describe CommandFlag do
       end
     end
 
-    context 'value provided' do
+    context 'default provided' do
 
-      let(:args) { {:name => flag, :value => value, :message => message} }
+      let(:args) { {:name => flag, :default => value, :message => message} }
 
       it_behaves_like 'a Command Flag object'
 

@@ -12,6 +12,9 @@ class EnvVar
   # @return [true, nil] if the state of the EnvVar requires the task to stop
   attr_reader :stop
 
+  # @return [String] the value of the ENV based on specified default and environment state
+  attr_reader :value
+
   # Creates a new instance of EnvVar, holds information about the ENV in the environment
   # @param [Hash] attribute_hash hash of information about the environment variable
   # @option attribute_hash [String] :name The environment variable
@@ -22,6 +25,8 @@ class EnvVar
     @var = attribute_hash[:name]
     @message = attribute_hash[:message]
     @default = attribute_hash[:default]
+    @set_env = attribute_hash[:set_env] || true
+
     set_message_level
     set_value
   end
@@ -50,7 +55,9 @@ class EnvVar
 
   private
   def set_value
-    ENV[@var] = @default unless ENV[@var]
+    # TODO should an env automatically set the ENV?
+    @value = ENV[@var] || @default
+    ENV[@var] = @value if @set_env
   end
 
   def check

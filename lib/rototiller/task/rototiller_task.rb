@@ -55,12 +55,13 @@ module Rototiller
       # @option args [String] :name The command line flag
       # @option args [String] :value The value for the command line flag
       # @option args [String] :message A message describing the use of this command line flag
+      # @option args [String] :override_env An environment variable used to override the flag value
       #
       # for block {|a| ... }
       # @yield [a] Optional block syntax allows you to specify information about the command line flag, available methods track hash keys
       def add_flag(*args, &block)
         raise ArgumentError.new("add_flag takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :value, :message]
+        attributes = [:name, :default, :message, :override_env]
         add_param(@flags, CommandFlag, attributes, args, &block)
       end
 
@@ -70,7 +71,7 @@ module Rototiller
         puts @flags.format_messages
         puts @env_vars.format_messages
         exit_code = 1
-        exit exit_code if @env_vars.stop?
+        exit exit_code if @env_vars.stop? || @flags.stop?
       end
 
       # @private
