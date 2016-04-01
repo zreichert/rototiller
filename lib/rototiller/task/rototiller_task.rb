@@ -39,16 +39,12 @@ module Rototiller
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
       def add_env(*args, &block)
-        #args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
-        if block_given?
-          #require 'pry'; binding.pry
-          #add_param_methods
-          tmp_object = Object.new
-          class << tmp_object
-            [:name, :default, :message].each{ |i| attr_accessor i }
-          end
 
-          yield(tmp_object)
+        if block_given?
+
+          block_syntax_obj = create_block_syntax_object
+
+          yield(block_syntax_obj)
           env = [tmp_object.name, tmp_object.default, tmp_object.message].compact
           @env_vars.push(EnvVar.new(*env))
         else
@@ -59,8 +55,22 @@ module Rototiller
       #TODO add arg validation to CommandFlag
       # add_flag(CommandFlag.new(), CommandFlag.new(), CommandFlag.new())
       # add_flag('--foo', 'This is how you use --foo', 'default_value')
-      def add_flag(*args)
-        args.all?{ |arg| arg.is_a?(CommandFlag)} ? @flags.push(*flags) : @flags.push(CommandFlag.new(*args))
+      def add_flag(*args, &block)
+
+        if block_given?
+
+          block_syntax_obj = create_block_syntax_object
+
+          yield(block_syntax_obj)
+          flag = [tmp_object.name, tmp_object.default, tmp_object.message].compact
+          @flags.push(CommandFlag.new(*flag))
+        else
+          args.all?{ |arg| arg.is_a?(CommandFlag)} ? @flags.push(*flags) : @flags.push(CommandFlag.new(*args))
+        end
+      end
+
+      def add_boolean_flag(*args, &block)
+
       end
 
       private
@@ -108,10 +118,12 @@ module Rototiller
         @verbose = verbosity
       end
 
-      def add_param_methods
-        @attribute_params.each do |p|
-          self.send(:attr_accessor, p)
+      def create_block_syntax_object
+        tmp_object = Object.new
+        class << tmp_object
+          [:name, :default, :message].each{ |i| attr_accessor i }
         end
+        tmp_object
       end
     end
   end
