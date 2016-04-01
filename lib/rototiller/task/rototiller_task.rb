@@ -9,6 +9,7 @@ module Rototiller
     class RototillerTask < ::Rake::TaskLib
       attr_accessor :name
       attr_accessor :command
+      attr_accessor :command_arg
 
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
@@ -38,39 +39,34 @@ module Rototiller
       #TODO add arg validation to EnvVar and CommandFlag
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
-      def add_env(*args, &block)
+      #def add_env(*args, &block)
 
-        if block_given?
+      #  if block_given?
 
-          block_syntax_obj = create_block_syntax_object
+      #    block_syntax_obj = create_block_syntax_object
 
-          yield(block_syntax_obj)
-          env = [tmp_object.name, tmp_object.default, tmp_object.message].compact
-          @env_vars.push(EnvVar.new(*env))
-        else
-          args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
-        end
-      end
+      #    yield(block_syntax_obj)
+      #    env = [block_syntax_obj.name, block_syntax_obj.default, block_syntax_obj.message].compact
+      #    @env_vars.push(EnvVar.new(*env))
+      #  else
+      #    args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
+      #  end
+      #end
 
       #TODO add arg validation to CommandFlag
       # add_flag(CommandFlag.new(), CommandFlag.new(), CommandFlag.new())
       # add_flag('--foo', 'This is how you use --foo', 'default_value')
+
+      def add_env(*args,&block)
+        add_param(@env_vars, EnvVar, args, &block)
+      end
+
       def add_flag(*args, &block)
-
-        if block_given?
-
-          block_syntax_obj = create_block_syntax_object
-
-          yield(block_syntax_obj)
-          flag = [tmp_object.name, tmp_object.default, tmp_object.message].compact
-          @flags.push(CommandFlag.new(*flag))
-        else
-          args.all?{ |arg| arg.is_a?(CommandFlag)} ? @flags.push(*flags) : @flags.push(CommandFlag.new(*args))
-        end
+        add_param(@flags, CommandFlag, args, &block)
       end
 
       def add_boolean_flag(*args, &block)
-
+        add_param(@flags, CommandFlag, args, &block)
       end
 
       private
@@ -124,6 +120,24 @@ module Rototiller
           [:name, :default, :message].each{ |i| attr_accessor i }
         end
         tmp_object
+      end
+
+      # TODO abstract away the block syntax and pushing into a collection
+      def add_param(collection, param_class, args, &block)
+
+        if block_given?
+
+          block_syntax_obj = Object.new
+          class << block_syntax_obj
+            [:name, :default, :message].each{ |i| attr_accessor i }
+          end
+
+          yield(block_syntax_obj)
+          env = [block_syntax_obj.name, block_syntax_obj.default, block_syntax_obj.message].compact
+          collection.push(param_class.new(*env))
+        else
+          args.all?{ |arg| arg.is_a?(param_class)} ? collection.push(*args) : collection.push(param_class.new(*args))
+        end
       end
     end
   end
