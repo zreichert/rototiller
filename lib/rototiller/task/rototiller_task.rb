@@ -37,7 +37,7 @@ module Rototiller
 
       #TODO add arg validation to EnvVar and CommandFlag
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
-      # add_env('FOO', 'This is how you use FOO', 'default_value')
+      # add_env('FOO', 'default_value', 'This is how you use FOO')
       def add_env(*args)
         args.all?{ |arg| arg.is_a?(EnvVar)} ? @env_vars.push(*args) : @env_vars.push(EnvVar.new(*args))
       end
@@ -54,7 +54,8 @@ module Rototiller
       def print_messages
         puts @flags.format_messages
         puts @env_vars.format_messages
-        exit if @env_vars.stop?
+        exit_code = 1
+        exit exit_code if @env_vars.stop?
       end
 
       # @private
