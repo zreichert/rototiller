@@ -47,11 +47,12 @@ describe ParamCollection do
       end
     end
 
+    let(:env_message_header) {"The environment variable:"}
     it 'should work with one filter' do
       param_collection.push(*vars)
 
       [unset_env_1_no_default, unset_env_2_no_default].each do |var|
-        expected_message = /31mThe ENV #{var.var} is required, description/
+        expected_message = /31mERROR: #{env_message_header} '#{var.var}' is required: description/
         expect(param_collection.format_messages({:stop => true})).to match(expected_message)
       end
     end
@@ -60,7 +61,7 @@ describe ParamCollection do
       param_collection.push(*vars)
 
       [set_env_1_no_default, set_env_2_no_default].each do |var|
-        expected_message = /32mThe ENV #{var.var} was found in the environment with the value #{ENV[var.var]}/
+        expected_message = /32mINFO: #{env_message_header} '#{var.var}' was found with value: '#{ENV[var.var]}'/
         expect(param_collection.format_messages({:default => nil, :message_level => :info})).to match(expected_message)
       end
     end

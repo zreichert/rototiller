@@ -160,32 +160,36 @@ module Rototiller::Task
         let(:env_name) {unique_env}
         let(:env_desc) {'used in some task for some purpose'}
         let(:env_default) {'default_value'}
+        let(:env_message_header) {"The environment variable: '#{env_name}'"}
         it "prints error about missing environment variable created via EnvVar.new()" do
           task.add_env(EnvVar.new(env_name, env_desc))
           expect(task).to receive(:exit)
           expect{ described_run_task }
-            .to output(/The ENV #{env_name} is required, #{env_desc}/)
+            .to output(/ERROR: #{env_message_header} is required: #{env_desc}/)
             .to_stdout
         end
+        #TODO: add warning case
         it "prints description about missing environment variable with default created via EnvVar.new()" do
-          task.add_env(EnvVar.new(env_name, env_desc, env_default))
+          task.add_env(EnvVar.new(env_name, env_default, env_desc))
           expect{ described_run_task }
-            .to output(/WARNING: the ENV #{env_name} is not set.*default value: used in some/)
+            .to output(/INFO: #{env_message_header} was found with value: '#{env_default}': #{env_desc}/)
             .to_stdout
         end
         it "prints error about missing environment variable created via add_env" do
           task.add_env(env_name, env_desc)
           expect(task).to receive(:exit)
           expect{ described_run_task }
-            .to output(/The ENV #{env_name} is required, #{env_desc}/)
+            .to output(/ERROR: #{env_message_header} is required: #{env_desc}/)
             .to_stdout
         end
         it "prints description about missing environment variable with default created via add_env" do
           task.add_env(env_name, env_default, env_desc)
           expect{ described_run_task }
-            .to output(/WARNING: the ENV #{env_name} is not set.*default value: #{env_default}/)
+            .to output(/INFO: #{env_message_header} was found with value: '#{env_default}': #{env_desc}/)
             .to_stdout
         end
+        #TODO add INFO case
+        #TODO add expect to raise with other case, if possible
         it "raises argument error for too many env string args" do
           expect{ task.add_env('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
         end
@@ -194,7 +198,7 @@ module Rototiller::Task
                        EnvVar.new('VAR3',  env_desc),EnvVar.new(env_name,env_desc))
           expect(task).to receive(:exit)
           expect{ described_run_task }
-            .to output(/The ENV #{env_name} is required, #{env_desc}.*VAR2.*#{env_desc}.*#{env_name}/m)
+            .to output(/ERROR: #{env_message_header} is required: #{env_desc}.*VAR2.*VAR3.*#{env_name}/m)
             .to_stdout
         end
       end

@@ -1,7 +1,7 @@
 require 'rototiller/utilities/color_text'
 
 class EnvVar
-
+  MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2}
   include ColorText
 
   attr_accessor :var, :message, :default
@@ -28,11 +28,21 @@ class EnvVar
   # @return [String] the EnvVar's message, formatted for color and meaningful to the state of the EnvVAr
   def message
     if message_level == :error
-      red_text("The ENV #{@var} is required, #{@message}")
+      level_str = 'ERROR:'
     elsif message_level == :info
-      green_text("The ENV #{@var} was found in the environment with the value #{ENV[@var]}")
+      level_str = 'INFO:'
     elsif message_level == :warning
-      yellow_text("WARNING: the ENV #{@var} is not set, proceeding with default value: #{@default}")
+      level_str = 'WARNING:'
+    end
+    message_prepend = "#{level_str} The environment variable: '#{@var}'"
+    if get_message_type == MESSAGE_TYPES[:default_noexist]
+      return yellow_text("#{message_prepend} is not set. Proceeding with default value: '#{@default}': #{@message}")
+    end
+    if get_message_type == MESSAGE_TYPES[:exist]
+      return green_text("#{message_prepend} was found with value: '#{ENV[@var]}': #{@message}")
+    end
+    if get_message_type == MESSAGE_TYPES[:nodefault_noexist]
+      return red_text("#{message_prepend} is required: #{@message}")
     end
   end
 
@@ -45,17 +55,32 @@ class EnvVar
     ENV.key?(@var)
   end
 
-  def set_message_level
+  def get_message_type
     if !@default && !check
+      # ENV is not Present and it has no default value
+      MESSAGE_TYPES[:nodefault_noexist]
+    elsif check
+      # ENV is present; may or may not have default, who cares
+      MESSAGE_TYPES[:exist]
+    elsif @default && !check
+      # ENV is not present and it has default value
+      MESSAGE_TYPES[:default_noexist]
+    end
+  end
+
+  def set_message_level
+    if get_message_type == MESSAGE_TYPES[:nodefault_noexist]
       # ENV is not Present and it has no default value
       @message_level = :error
       @stop = true
-    elsif !@default && check || @default && check
+    elsif get_message_type == MESSAGE_TYPES[:exist]
       # ENV is present and it has no default value
       @message_level = :info
-    elsif @default && !check
+    elsif get_message_type == MESSAGE_TYPES[:default_noexist]
       # ENV is not present and it has default value
-      @message_level = :warning
+      @message_level = :info
+    else
+      raise 'EnvVar: message type not supported'
     end
   end
 end
