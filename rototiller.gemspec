@@ -16,5 +16,5 @@ Gem::Specification.new do |s|
   s.files         = Dir['[A-Z]*[^~]'] + Dir['lib/**/*.rb'] + Dir['spec/*']
 
   #Run time dependencies
-  s.add_runtime_dependency 'rake'
+  s.add_runtime_dependency 'rake', '>= 0.9.0'
 end

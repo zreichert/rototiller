@@ -38,9 +38,12 @@ module Rototiller::Task
           expect(Rake.application.invoke_task("task_name")).to be_an(Array)
           # this will fail if previous tests don't adequately clear the desc stack
           # http://apidock.com/ruby/v1_9_3_392/Rake/TaskManager/get_description
-          expect(Rake.application.last_comment).to eq 'RototillerTask: A Task with optional environment variable and command flag tracking'
+          expect(Rake.application.last_description).to eq 'RototillerTask: A Task with optional environment-variable and command-flag tracking'
         end
         #TODO override comment
+        it "doesn't say last_comment is deprecated '#{init_method}'" do
+          expect { described_run_task }.not_to output(/\[DEPRECATION\] `last_comment`/).to_stdout
+        end
       end
 
       context "with args passed to the '#{init_method}' rake task" do

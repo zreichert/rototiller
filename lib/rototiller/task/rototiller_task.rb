@@ -79,7 +79,7 @@ module Rototiller
       def define(args, &task_block)
         # Default task description
         # can be overridden with standard 'desc' DSL method
-        desc 'RototillerTask: A Task with optional environment variable and command flag tracking' unless ::Rake.application.last_comment
+        desc 'RototillerTask: A Task with optional environment-variable and command-flag tracking' unless ::Rake.application.last_description
 
         task(@name, *args) do |_, task_args|
           RakeFileUtils.__send__(:verbose, @verbose) do
