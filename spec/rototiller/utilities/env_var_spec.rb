@@ -11,38 +11,32 @@ describe EnvVar do
 
         context env_set do
 
-          let (:var_name)       { "VARNAME_#{(0...8).map { (65 + rand(26)).chr }.join}" }
-          let (:var_message)    { "This is how you use #{var_name}" }
-          let (:var_default)    { "VARDEFAULT_#{(0...8).map { (65 + rand(26)).chr }.join}" }
-          let (:var_env_value)  { "VARENVVALUE_#{(0...8).map { (65 + rand(26)).chr }.join}" }
+          let (:message_header) { 'The environment variable:' }
 
           before(:each) do
-            if env_set == 'ENV set'
-              ENV[var_name] = var_env_value
-              @var_value = var_env_value
-            else
-              ENV[var_name] = nil
-              @var_value = method_signature == 'with_default' ? var_default : false
-            end
+            @var_name      = "VARNAME_#{(0...8).map { (65 + rand(26)).chr }.join}"
+            @var_message   = "This is how you use #{@var_name}"
+            @var_env_value = "VARENVVALUE_#{(0...8).map { (65 + rand(26)).chr }.join}"
+            @var_default   = method_signature == 'with_default' ? "VARDEFAULT_#{(0...8).map { (65 + rand(26)).chr }.join}" : nil
+            ENV[@var_name] = @var_env_value if env_set == 'ENV set'
 
-            args = [var_name, var_message]
-            args.insert(1, var_default) if method_signature == 'with_default'
+            args = [@var_name, @var_default, @var_message]
             @env_var = EnvVar.new(*args)
 
-            @expected_var_default = var_default
-            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV not set')
-            @expected_var_default = nil if (method_signature == 'without_default' && env_set == 'ENV set')
+            @expected_var_default = @var_default
+            @expected_var_default = nil if method_signature == 'without_default'
 
             # validation
             if (method_signature == 'with_default' && env_set == 'ENV not set')
-              @formatted_message = "\e[33mWARNING: the ENV #{var_name} is not set, proceeding with default value: #{var_default}\e[0m"
+              #@formatted_message = "\e[33mINFO: #{message_header} '#{@var_name}' is not set. Proceeding with default value: '#{@var_default}'\e[0m"
+              @formatted_message = "\e[32mINFO: #{message_header} '#{@var_name}' was found with value: '#{@var_default}': #{@var_message}\e[0m"
               @expected_stop = nil
             elsif (method_signature == 'without_default' && env_set == 'ENV not set')
-              @formatted_message = "\e[31mThe ENV #{var_name} is required, #{var_message}\e[0m"
+              @formatted_message = "\e[31mERROR: #{message_header} '#{@var_name}' is required: #{@var_message}\e[0m"
               @expected_stop = true
             #elsif (method_signature == 'without_default' && env_set == 'ENV set')
             elsif (env_set == 'ENV set')
-              @formatted_message = "\e[32mThe ENV #{var_name} was found in the environment with the value #{var_env_value}\e[0m"
+              @formatted_message = "\e[32mINFO: #{message_header} '#{@var_name}' was found with value: '#{@var_env_value}': #{@var_message}\e[0m"
               @expected_stop = nil
             end
 
@@ -52,7 +46,7 @@ describe EnvVar do
           describe '.var' do
 
             it 'returns the var' do
-              expect(@env_var.var).to eq(var_name)
+              expect(@env_var.var).to eq(@var_name)
             end
           end
 
