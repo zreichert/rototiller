@@ -45,15 +45,43 @@ task :acceptance => [:check_acceptance, :generate_host_config]do |t, args|
 end
 
 Rototiller::Task::RototillerTask.define_task :check_acceptance do |t|
-  t.add_env('TEST_TARGET'         , 'centos7-64'                            , 'The argument to pass to beaker-hostgenerator')
-  t.add_env('BEAKER_CONFIG'       , 'acceptance/hosts.cfg'                  , 'The configuration file that Beaker will use')
-  t.add_env('BEAKER_PRESERVEHOSTS', 'never'                                 , 'The beaker setting to preserve a provisioned host')
-  t.add_env('BEAKER_KEYFILE'      , "#{ENV['HOME']}/.ssh/id_rsa-acceptance" , 'The SSH key used to access a SUT')
-  t.add_env("BEAKER_LOADPATH"     , 'acceptance/lib'                        , 'The load path Beaker will use')
-  t.add_env("BEAKER_PRESUITE"     , 'acceptance/pre-suite'                  , 'THe path to a directory containing pre-suites')
-  t.add_env("BEAKER_TESTSUITE"    , 'acceptance/tests'                      , 'The path to the tests you want beaker to run')
+  # with a hash
+  t.add_env({:name => 'TEST_TARGET',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator'})
+
+  # with new block syntax
+  t.add_env do |env|
+    env.name = 'BEAKER_CONFIG'
+    env.default = 'acceptance/hosts.cfg'
+    env.message = 'The configuration file that Beaker will use'
+  end
+  t.add_env do |env|
+    env.name = 'BEAKER_PRESERVEHOSTS'
+    env.default = 'never'
+    env.message = 'The beaker setting to preserve a provisioned host'
+  end
+  t.add_env do |env|
+    env.name = 'BEAKER_KEYFILE'
+    env.default ="#{ENV['HOME']}/.ssh/id_rsa-acceptance"
+    env.message = 'The SSH key used to access a SUT'
+  end
+  t.add_env do |env|
+    env.name ="BEAKER_LOADPATH"
+    env.default = 'acceptance/lib'
+    env.message = 'The load path Beaker will use'
+  end
+  t.add_env do |env|
+    env.name = "BEAKER_PRESUITE"
+    env.default = 'acceptance/pre-suite'
+    env.message = 'THe path to a directory containing pre-suites'
+  end
+  t.add_env do |env|
+    env.name = 'BEAKER_TESTSUITE'
+    env.default = 'acceptance/tests'
+    env.message = 'The path to the tests you want beaker to run'
+  end
 end
 
 Rototiller::Task::RototillerTask.define_task :check_test do |t|
-  t.add_env('SPEC_PATTERN', 'spec/', 'The pattern RSpec will use to find tests')
+  t.add_env(:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests')
 end
+

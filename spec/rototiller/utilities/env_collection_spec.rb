@@ -3,14 +3,14 @@ require 'spec_helper'
 describe EnvCollection do
 
   let(:env_collection)                { EnvCollection.new }
-  let(:set_env_1_with_default)        { EnvVar.new(set_random_env, 'description', 'devault value') }
-  let(:set_env_2_with_default)        { EnvVar.new(set_random_env, 'description', 'devault value') }
-  let(:unset_env_1_with_default)      { EnvVar.new(unique_env, 'description', 'devault value') }
-  let(:unset_env_2_with_default)      { EnvVar.new(unique_env, 'description', 'devault value') }
-  let(:set_env_1_no_default)          { EnvVar.new(set_random_env, 'description') }
-  let(:set_env_2_no_default)          { EnvVar.new(set_random_env, 'description') }
-  let(:unset_env_1_no_default)        { EnvVar.new(unique_env, 'description') }
-  let(:unset_env_2_no_default)        { EnvVar.new(unique_env, 'description') }
+  let(:set_env_1_with_default)        { EnvVar.new({:name => set_random_env, :message => 'description', :default => 'devault value'}) }
+  let(:set_env_2_with_default)        { EnvVar.new({:name => set_random_env, :message => 'description', :default => 'devault value'}) }
+  let(:unset_env_1_with_default)      { EnvVar.new({:name => unique_env, :message => 'description', :default => 'devault value'}) }
+  let(:unset_env_2_with_default)      { EnvVar.new({:name => unique_env, :message => 'description', :default => 'devault value'}) }
+  let(:set_env_1_no_default)          { EnvVar.new({:name => set_random_env, :message => 'description'}) }
+  let(:set_env_2_no_default)          { EnvVar.new({:name => set_random_env, :message => 'description'}) }
+  let(:unset_env_1_no_default)        { EnvVar.new({:name => unique_env, :message => 'description'}) }
+  let(:unset_env_2_no_default)        { EnvVar.new({:name => unique_env, :message => 'description'}) }
 
 
   subject { env_collection.push(*args); env_collection }

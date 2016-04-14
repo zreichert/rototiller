@@ -11,20 +11,13 @@ describe CommandFlag do
     subject   { CommandFlag }
 
     it 'should work with correct arguments' do
-      expect{subject.new(flag, message)}.not_to raise_error
-      expect{subject.new(flag, value, message)}.not_to raise_error
-    end
-
-    it 'should not with incorrect arguments' do
-      expect{subject.new()}.to raise_error ArgumentError
-      expect{subject.new(flag)}.to raise_error ArgumentError
-      expect{subject.new(flag, message, value, 'foobar')}.to raise_error ArgumentError
+      expect{subject.new({:name => flag, :value => value, :message => message})}.not_to raise_error
     end
   end
 
   context 'Instance methods' do
 
-    subject   { CommandFlag.new(*args)}
+    subject   { CommandFlag.new(args)}
 
     shared_examples 'a Command Flag object' do
 
@@ -51,15 +44,18 @@ describe CommandFlag do
 
     context 'no value provided' do
 
-      let(:args) { [flag, message] }
+      let(:args) { {:name => flag, :message => message} }
 
-      it_behaves_like 'a Command Flag object'
+      # Disabled because pending
+      #it_behaves_like 'a Command Flag object'
 
       it 'should report the value' do
+        pending 'this functionality has been temporarily removed'
         expect(subject.value).to be(nil)
       end
 
       it 'should message with information about value' do
+        pending 'this functionality has been temporarily removed'
         expected_message = /The CLI flag #{flag} will be used, no value was provided./
         expect(subject.message).to match(expected_message)
       end
@@ -67,7 +63,7 @@ describe CommandFlag do
 
     context 'value provided' do
 
-      let(:args) { [flag, value, message] }
+      let(:args) { {:name => flag, :value => value, :message => message} }
 
       it_behaves_like 'a Command Flag object'
 
