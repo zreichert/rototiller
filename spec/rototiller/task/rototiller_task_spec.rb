@@ -125,7 +125,7 @@ module Rototiller::Task
         let(:flag1) {'--flagoner'}
         let(:value) {'I am a value'}
         it "renders cli for '#{init_method}' with one flag" do
-          arg = {:name => flag1, :message => 'description', :value => value}
+          arg = {:name => flag1, :message => 'description', :default => value}
           task.command = command
           task.add_flag(arg)
           expect(task).to receive(:system).with("#{command} #{flag1} #{value}").and_return(true)
@@ -135,8 +135,8 @@ module Rototiller::Task
         end
         it "renders cli for '#{init_method}' with multiple flags" do
           task.command = command
-          task.add_flag({:name => flag1, :message => 'other description', :value => value})
-          task.add_flag({:name => '-t', :message => '-t description', :value => 'tvalue'})
+          task.add_flag({:name => flag1, :message => 'other description', :default => value})
+          task.add_flag({:name => '-t', :message => '-t description', :default => 'tvalue'})
           expect(task).to receive(:system).with("#{command} #{flag1} #{value} -t tvalue").and_return(true)
           silence_output do
             described_run_task
@@ -150,7 +150,7 @@ module Rototiller::Task
             .to_stdout
         end
         it "prints messages for '#{init_method}' with single value CLI flag" do
-          task.add_flag({:name => '-t', :message =>  '-t description', :value =>  'tvalue2'})
+          task.add_flag({:name => '-t', :message =>  '-t description', :default =>  'tvalue2'})
           expect{ described_run_task }
             .to output(/-t description.*CLI flag -t will be used with value/m)
             .to_stdout

@@ -34,8 +34,8 @@ test_name 'C97820: can set key/value flag in a RototillerTask' do
   end
 
   command_flags = [
-      {:name => '--hash-syntax',  :value => 'wow such hash syntax'},
-      {:name => '--use-a-block',   :value => 'wow much block syntax', :block_syntax => true}
+      {:name => '--hash-syntax',  :default => 'wow such hash syntax'},
+      {:name => '--use-a-block',   :default => 'wow much block syntax', :block_syntax => true}
   ]
 
 
@@ -58,8 +58,8 @@ end
       assert_no_match(/error/i, result.output, 'An unexpected error was observed')
 
       command_flags.each do |flag|
-        command_regex = /#{flag[:name]} #{flag[:value]}/
-        rototiller_output_regex = /The CLI flag #{flag[:name]} will be used with value #{flag[:value]}/
+        command_regex = /#{flag[:name]} #{flag[:default]}/
+        rototiller_output_regex = /The CLI flag #{flag[:name]} will be used with value #{flag[:default]}/
         assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
         assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
       end

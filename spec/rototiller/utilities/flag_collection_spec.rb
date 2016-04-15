@@ -5,8 +5,8 @@ require 'spec_helper'
 describe FlagCollection do
 
   let(:flag_collection)          { FlagCollection.new }
-  let(:flag_1_with_default)      { CommandFlag.new({:name => random_string, :message => 'description', :value => 'devault value'}) }
-  let(:flag_2_with_default)      { CommandFlag.new({:name => random_string, :message => 'description', :value => 'devault value'}) }
+  let(:flag_1_with_default)      { CommandFlag.new({:name => random_string, :message => 'description', :default => 'devault value'}) }
+  let(:flag_2_with_default)      { CommandFlag.new({:name => random_string, :message => 'description', :default => 'devault value'}) }
   #let(:flag_1_no_default)        { CommandFlag.new({:name => random_string, :message => 'description'}) }
   #let(:flag_2_no_default)        { CommandFlag.new({:name => random_string, :message => 'description'}) }
 
