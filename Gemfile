@@ -2,6 +2,9 @@ source 'https://rubygems.org'
 
 # place all development, system_test, etc dependencies here
 
+# in the Rakefile, so we require it in all groups
+gem 'rspec'                ,'~> 3.1.0'
+
 group :system_tests do
   #gem 'beaker', :path => "../../beaker/"
   gem 'beaker'               ,'~> 2.22'
@@ -9,7 +12,6 @@ group :system_tests do
 end
 
 group :development do
-  gem 'rspec'                ,'~> 3.1.0'
   gem 'simplecov'
   #Documentation dependencies
   gem 'yard'                 ,'~> 0'
