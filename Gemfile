@@ -16,6 +16,7 @@ group :development do
   gem 'markdown'             ,'~> 0'
   # restrict version to enable ruby 1.9.3
   gem 'mime-types'           ,'~> 2.0'
+  gem 'google-api-client'    ,'<= 0.9.4'
 end
 
 local_gemfile = "#{__FILE__}.local"
