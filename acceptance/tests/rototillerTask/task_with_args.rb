@@ -12,9 +12,9 @@ require 'rototiller'
 
 rototiller_task :#{rake_task_name}, [:arg1, :arg2] do |t, args|
   if args[:arg2]
-    t.command = "echo 'task args: #\{args\}'"
+    t.add_command({:name => "echo 'task args: #\{args\}'"})
   else
-    t.command = "echo 'task arg1: #\{args[:arg1]\}'"
+    t.add_command({:name => "echo 'task arg1: #\{args[:arg1]\}'"})
   end
 end
   EOS

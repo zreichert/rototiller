@@ -3,13 +3,17 @@ require 'rototiller/utilities/param_collection'
 require 'rototiller/utilities/env_collection'
 require 'rototiller/utilities/flag_collection'
 require 'rototiller/utilities/command_flag'
+require 'rototiller/utilities/command'
+require 'rototiller/utilities/block_syntax_object'
 require 'rake/tasklib'
 
 module Rototiller
   module Task
     class RototillerTask < ::Rake::TaskLib
-      attr_accessor :name
-      attr_accessor :command
+      #TODO rename instance vars and methods to not match sub blocks
+      attr_reader :name
+      attr_reader :command
+      attr_reader :override_env
 
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
@@ -65,6 +69,23 @@ module Rototiller
         add_param(@flags, CommandFlag, attributes, args, &block)
       end
 
+      # adds command to be executed by task
+      # @param [Hash] args hash of information about the command to be exedcuted
+      # @option arg [String] :name The command to be executed
+      # @option arg [String] :override_env An environment variable used to override the command to be executed by the task
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about command, available methods track hash keys
+      def add_command(args={}, &block)
+        attributes = [:name, :override_env]
+        if block_given?
+          attribute_hash = pull_params_from_block(attributes, &block).to_h
+        else
+          attribute_hash = args
+        end
+        @command = Rototiller::Command.new(attribute_hash).name
+      end
+
       private
 
       def print_messages
@@ -77,7 +98,7 @@ module Rototiller
       # @private
       def run_task
         print_messages
-        command_str = @command << @flags.to_s
+        command_str = @command + @flags.to_s
         puts command_str if @verbose
 
         return if system(command_str)
@@ -115,15 +136,7 @@ module Rototiller
 
         if block_given?
 
-          block_syntax_obj = Object.new
-          block_syntax_obj.class.class_eval { param_array.each { |i| attr_accessor i } }
-
-          yield(block_syntax_obj)
-
-          # pull information out of the block_syntax_obj
-          param_hash = Hash.new
-          param_array.each{ |p| param_hash[p.to_sym] = block_syntax_obj.send(p)}
-
+          param_hash = pull_params_from_block(param_array, &block).to_h
           collection.push(param_class.new(param_hash))
         else
 
@@ -133,6 +146,13 @@ module Rototiller
             collection.push(param_class.new(arg))
           end
         end
+      end
+
+      def pull_params_from_block(param_array, &block)
+
+        block_syntax_obj = Rototiller::Block_syntax.new(param_array)
+        yield(block_syntax_obj)
+        block_syntax_obj
       end
     end
   end

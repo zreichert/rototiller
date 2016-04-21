@@ -70,12 +70,12 @@ module Rototiller::Task
         end
 
         it 'prints it if the command run failed' do
-          task.command = 'exit 1'
+          task.add_command({:name => 'exit 1'})
           expect { described_run_task }.to output(/Bad news/).to_stdout
         end
 
         it 'does not print it if the command run succeeded' do
-          task.command = 'echo'
+          task.add_command({:name =>  'echo'})
           expect { described_run_task }.not_to output(/Bad/).to_stdout
         end
       end
@@ -83,7 +83,7 @@ module Rototiller::Task
       context 'with custom exit status' do
         it 'returns the correct status on exit', :slow do
           expect(task).to receive(:exit).with(2)
-          task.command = 'ruby -e "exit(2);" ;#'
+          task.add_command({:name => 'ruby -e "exit(2);" ;#'})
           described_run_task
         end
       end
@@ -105,7 +105,7 @@ module Rototiller::Task
           #  so any of these that run system spews that to the output.  We should probably not set that as the default command.  it's a bit verbose and pedantic.
           #  it doesn't check if there are any envs or other tasks, and there are good reasons to not have a command, in some cases
           silence_output do
-            task.command = 'exit 2'
+            task.add_command({:name => 'exit 2'})
             described_verbose(true)
             expect { described_run_task }.to output(/failed/).to_stderr
             described_verbose(false)
@@ -114,7 +114,7 @@ module Rototiller::Task
         it 'doesn\'t print if fail_on_error is false' do
           expect(task).to_not receive(:exit)
           task.fail_on_error = false
-          task.command = 'exit 2'
+          task.add_command({:name =>  'exit 2'})
           expect { described_run_task }.to output("").to_stderr
         end
       end
@@ -126,7 +126,7 @@ module Rototiller::Task
         let(:value) {'I am a value'}
         it "renders cli for '#{init_method}' with one flag" do
           arg = {:name => flag1, :message => 'description', :default => value}
-          task.command = command
+          task.add_command({:name => command})
           task.add_flag(arg)
           expect(task).to receive(:system).with("#{command} #{flag1} #{value}").and_return(true)
           silence_output do
@@ -134,7 +134,7 @@ module Rototiller::Task
           end
         end
         it "renders cli for '#{init_method}' with multiple flags" do
-          task.command = command
+          task.add_command({:name => command})
           task.add_flag({:name => flag1, :message => 'other description', :default => value})
           task.add_flag({:name => '-t', :message => '-t description', :default => 'tvalue'})
           expect(task).to receive(:system).with("#{command} #{flag1} #{value} -t tvalue").and_return(true)

@@ -64,9 +64,9 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
     flag.override_env = 'BEAKER_TESTS'
   end
 
-  t.command = 'beaker --debug'
+  t.add_command({:name => 'beaker --debug', :override_env => 'BEAKER_EXECUTABLE'})
 end
 
 Rototiller::Task::RototillerTask.define_task :check_test do |t|
-  t.add_env(:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests')
+  t.add_env({:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests'})
 end
