@@ -8,9 +8,15 @@ test_name 'C97830: describe and list RototillerTasks' do
   @task_body_string = 'Lorem ipsum dolor sit amet'
   def create_rakefile_task_segment(options)
     description = "desc '#{options[:init_method]} #{options[:description]}'" if options[:description]
-    segment = <<-EOS
+    if options[:init_method] == :dsl
+      method = 'rototiller_task'
+    else
+      method = "Rototiller::Task::RototillerTask.#{options[:init_method]}"
+    end
+
+      segment = <<-EOS
 #{description}
-Rototiller::Task::RototillerTask.#{options[:init_method]} :#{options[:init_method]}#{options[:description]} do |t|
+#{method} :#{options[:init_method]}#{options[:description]} do |t|
   puts '#{options[:init_method]}#{options[:description]} #{@task_body_string} '
 end
 EOS
@@ -21,6 +27,8 @@ EOS
     {:init_method => 'define_task', :description => 'yep'},
     {:init_method => 'new', :description =>  nil },
     {:init_method => 'new', :description => 'yep'},
+    {:init_method => :dsl, :description =>  nil },
+    {:init_method => :dsl, :description => 'yep'},
   ]
 
   rakefile_contents = <<-EOS
@@ -32,6 +40,7 @@ require 'rototiller'
   tasks.each do |task|
     rakefile_contents = rakefile_contents + create_rakefile_task_segment(task)
   end
+
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
   tasks.each do |task|
@@ -53,5 +62,4 @@ require 'rototiller'
       assert_match(/#{options[:init_method]}#{options[:description]} #{@task_body_string}/, result.stdout, "The expected output from the task '#{options[:init_method]}#{options[:description]}' was not observed")
     end
   end
-
 end

@@ -10,7 +10,7 @@ test_name 'C97795: ensure RototillerTasks can use arguments' do
 $LOAD_PATH.unshift('/root/rototiller/lib')
 require 'rototiller'
 
-Rototiller::Task::RototillerTask.define_task :#{rake_task_name}, [:arg1, :arg2] do |t, args|
+rototiller_task :#{rake_task_name}, [:arg1, :arg2] do |t, args|
   if args[:arg2]
     t.command = "echo 'task args: #\{args\}'"
   else
