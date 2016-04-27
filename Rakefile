@@ -22,7 +22,7 @@ task :generate_host_config do |t, args|
   sh "cat acceptance/hosts.cfg"
 end
 
-Rototiller::Task::RototillerTask.define_task :acceptance => [:generate_host_config] do |t|
+rototiller_task :acceptance => [:generate_host_config] do |t|
   # with a hash
   t.add_env({:name => 'TEST_TARGET',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator'})
 
