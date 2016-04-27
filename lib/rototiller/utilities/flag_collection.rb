@@ -15,12 +15,12 @@ class FlagCollection < ParamCollection
 
     @collection.each do |flag|
       if flag.value.nil?
-        flag_str << ' ' << flag.flag
+        flag_str << flag.flag << ' '
       else
-        flag_str << ' ' << flag.flag << ' ' << flag.value
+        flag_str << flag.flag << ' ' << flag.value << ' '
       end
     end
 
-    flag_str
+    flag_str.rstrip
   end
 end
