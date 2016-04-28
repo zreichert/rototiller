@@ -10,20 +10,20 @@ test_name 'C97794: ensure RototillerTasks can be parent/child tasks' do
   $LOAD_PATH.unshift('/root/rototiller/lib')
   require 'rototiller'
 
-  task :child do |t|
-    system('echo "i am the native child"')
-  end
-  task :parent => [:r_child, :child] do |t|
-    system('echo "i am the native parent"')
-  end
-  #{new_task_method} :r_child do |t|
-    t.command = 'echo "i am the tiller child"'
-  end
-  #{new_task_method} :r_parent => [:r_child, :child] do |t|
-    t.command = 'echo "i am the tiller parent"'
-  end
-    EOS
-    rakefile_path = create_rakefile_on(sut, rakefile_contents)
+task :child do |t|
+  system('echo "i am the native child"')
+end
+task :parent => [:r_child, :child] do |t|
+  system('echo "i am the native parent"')
+end
+Rototiller::Task::RototillerTask.define_task :r_child do |t|
+  t.add_command({:name => 'echo "i am the tiller child"'})
+end
+Rototiller::Task::RototillerTask.define_task :r_parent => [:r_child, :child] do |t|
+  t.add_command({:name => 'echo "i am the tiller parent"'})
+end
+  EOS
+  rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
     step "Execute task defined in rake task 'r_parent'" do
       on(sut, "rake r_parent", :accept_all_exit_codes => true) do |result|

@@ -46,7 +46,7 @@ require 'rototiller'
 
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(command_flags)}
-    t.command = 'echo'
+    t.add_command({:name => 'echo'})
 end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
