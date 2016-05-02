@@ -13,7 +13,6 @@ module Rototiller
       #TODO rename instance vars and methods to not match sub blocks
       attr_reader :name
       attr_reader :command
-      attr_reader :override_env
 
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
@@ -25,7 +24,9 @@ module Rototiller
       def initialize(*args, &task_block)
         @name          = args.shift
         @fail_on_error = true
-        @command       = 'echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.'
+        #TODO refactor or remove
+        @command = Rototiller::Command.new
+        @command.name = 'echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.'
         # rake's in-task implied method is true when using --verbose
         @verbose       = verbose == true
         @env_vars      = EnvCollection.new
@@ -51,7 +52,7 @@ module Rototiller
       def add_env(*args,&block)
         raise ArgumentError.new("add_env takes a block or a hash") if !args.empty? && block_given?
         attributes = [:name, :default, :message]
-        add_param(@env_vars, EnvVar, attributes, args, &block)
+        add_param(@env_vars, EnvVar, attributes, args, {:set_env => true}, &block)
       end
 
       # adds command line flags to be used in a command
@@ -77,13 +78,13 @@ module Rototiller
       # for block {|a| ... }
       # @yield [a] Optional block syntax allows you to specify information about command, available methods track hash keys
       def add_command(args={}, &block)
-        attributes = [:name, :override_env]
+        attributes = [:name, :override_env, :argument, :argument_override_env]
         if block_given?
           attribute_hash = pull_params_from_block(attributes, &block).to_h
         else
           attribute_hash = args
         end
-        @command = Rototiller::Command.new(attribute_hash).name
+        @command = Rototiller::Command.new(attribute_hash)
       end
 
       private
@@ -98,7 +99,9 @@ module Rototiller
       # @private
       def run_task
         print_messages
-        command_str = @command + @flags.to_s
+        command_str = [
+            (@command.name if @command.name), @flags.to_s, (@command.argument if @command.argument)
+        ].delete_if{ |i| [nil, '', false].any?{|forbidden| i == forbidden}}.join(' ')
         puts command_str if @verbose
 
         return if system(command_str)
@@ -132,17 +135,19 @@ module Rototiller
         @verbose = verbosity
       end
 
-      def add_param(collection, param_class, param_array, args, &block)
+      def add_param(collection, param_class, param_array, args, opts={}, &block)
 
         if block_given?
 
           param_hash = pull_params_from_block(param_array, &block).to_h
+          param_hash[:set_env] = true if opts[:set_env]
           collection.push(param_class.new(param_hash))
         else
 
           args.each do |arg|
 
             raise ArgumentError.new("Argument must ba a Hash not a #{arg.class}") unless arg.is_a?(Hash)
+            arg[:set_env] = true if opts[:set_env]
             collection.push(param_class.new(arg))
           end
         end

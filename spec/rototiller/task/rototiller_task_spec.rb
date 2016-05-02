@@ -13,7 +13,7 @@ module Rototiller::Task
           expect(task.fail_on_error).to eq true
         end
         it "renders cli for '#{init_method}' method" do
-          expect(task.command).to eq('echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.')
+          expect(task.command.name).to eq('echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.')
         end
 
         def described_define
@@ -210,6 +210,45 @@ module Rototiller::Task
           expect{ described_run_task }
             .to output(/ERROR: #{env_message_header} is required: #{env_desc}.*VAR2.*VAR3.*#{env_name}/m)
             .to_stdout
+        end
+      end
+      context 'Commands with arguments and flags' do
+
+        let(:command) {random_string}
+        let(:echo_command) {"echo #{command}"}
+        let(:argument) {random_string}
+        let(:command_env) {unique_env}
+        let(:argument_env) {unique_env}
+        let(:add_flag_args) { {:name => '--flag', :default => 'flag_value'} }
+        let(:args) { {:name => echo_command, :argument => argument, :override_env => command_env, :argument_override_env => argument_env} }
+        context 'variables not set' do
+
+          it 'should use the values in :name and :argument' do
+            task.add_command(args)
+            task.add_flag(add_flag_args)
+            task.send(:set_verbose)
+
+            expect { described_run_task }
+            .to output(/#{command} #{add_flag_args[:name]} #{add_flag_args[:default]} #{argument}/)
+            .to_stdout
+          end
+        end
+        context 'variables set' do
+
+          it 'should use the values inside the variables' do
+            command_env_value = random_string
+            argument_env_value = random_string
+            ENV[command_env] = "echo #{command_env_value}"
+            ENV[argument_env] = argument_env_value
+
+            task.add_command(args)
+            task.add_flag(add_flag_args)
+            task.send(:set_verbose)
+
+            expect { described_run_task }
+            .to output(/#{command_env_value} #{add_flag_args[:name]} #{add_flag_args[:default]} #{argument_env_value}/)
+            .to_stdout
+          end
         end
       end
     end

@@ -25,10 +25,9 @@ class EnvVar
     @var = attribute_hash[:name]
     @message = attribute_hash[:message]
     @default = attribute_hash[:default]
-    @set_env = attribute_hash[:set_env] || true
+    @set_env = attribute_hash[:set_env] || false
 
-    set_message_level
-    set_value
+    reset
   end
 
   # The formatted message to be displayed to the user
@@ -53,11 +52,27 @@ class EnvVar
     end
   end
 
+  def var=(var)
+    @var = var
+    reset
+  end
+
+  def default=(default)
+    @default = default
+    reset
+  end
+
+  def message=(message)
+    @message = message
+    reset
+  end
+
   private
-  def set_value
+  def reset
     # TODO should an env automatically set the ENV?
     @value = ENV[@var] || @default
     ENV[@var] = @value if @set_env
+    set_message_level
   end
 
   def check
