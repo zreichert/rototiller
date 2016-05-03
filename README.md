@@ -1,61 +1,143 @@
-# rototiller
+# Rototiller
 
-A shared rake task library for use at Puppet.
-Goals of Rototiller
+A [Rake](https://github.com/ruby/rake) helper for command-oriented tasks.
 
-* Provide a tool that can house shared rake task code for Puppet Labs.
-
-* Reduce duplication in rakefiles across projects at Puppet Labs.
-
+* simplifies the building of command strings in :rototiller_task for task authors
+* abstracts the overriding of command string components: commands, flags, arguments for task users
+* unifies and standardizes messaging surrounding the use of environment variables for task operations
+* Provides a tool that can house shared rake task code for Puppet.
+* Reduce duplication in Rakefiles across projects at Puppet.
 * Reduce effort required to write first class rake tasks.
-
 * Reduce time and effort trying to understand requirement to run rake tasks.
-
 * Provide a standard interface for executing tests in a given test tier regardless of framework (Not MVP)
 
-## Classes & Modules under development
-For more detailed documentation please refer to the yard docs.
+## Install
+    gem install rototiller
 
-####[EnvVar](lib/rototiller/utilities/env_var.rb)
+## Write
+Rototiller provides a Rake DSL addition called 'rototiller_task' which is a fully featured Rake task with environment variable handling, messaging and command-string-building functionality.
 
-  A class that tracks the state of an ENV variable.
-  This class is responsible for formatting its own messaging, the value that should be used, and if a task should stop.
+    require 'rototiller'
 
-####[Flag](lib/rototiller/utilities/flag.rb)
+    desc "task dependencies work. this one also uses an environment variable"
+    rototiller_task :parent_task do |task|
+      # most method initializers take either a hash, or block syntax (see next task)
+      task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
+      task.add_command({:name => "echo 'i am testing everything with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
+    end
 
-   A class that tracks the desired state of command line flags used in test invocation.
-   The desired state of these flags is determined by the user.
+    desc "override command-name with environment variable"
+    rototiller_task :test => :parent_task do |task|
+      # block syntax here. We give up some lines for more readability
+      task.add_command do |cmd|
+        cmd.name         = 'test'
+        cmd.override_env = 'ECHO_EXECUTABLE'
+      end
+      task.add_flag({:name => '-f', :default => 'Rakefile'})
+    end
 
-####[ParamCollection](lib/rototiller/utilities/param_collection.rb)
+    desc "override flag values with environment variables"
+    rototiller_task :test_flag_env do |task|
+      task.add_command do |cmd|
+        cmd.name = 'test'
+      end
+      task.add_flag do |flag|
+        flag.name         = '-f'
+        flag.default      = 'Rakefile'
+        flag.override_env = 'FLAG_VALUE'
+      end
+    end
 
-  A class to contain EnvVar and Flag classes.
-  Behaves similar to an Array.
+    desc "override command argument values with environment variables"
+    rototiller_task :test_arg_env do |task|
+      task.add_command do |cmd|
+        cmd.name                  = 'ls'
+        cmd.argument              = 'Rakefile'
+        cmd.argument_override_env = 'FILENAME'
+      end
+    end
 
-####[RototillerTask](lib/rototiller/task/rototiller_task.rb)
+## Use
+(with the above sample Rakefile)
 
-  A class used to build a rake task.
-  Similar in approach to [RSpec::Core::RakeTask](https://github.com/rspec/rspec-core/blob/master/lib/rspec/core/rake_task.rb)
+    $) rake -T
+    rake parent_task  # some parent task
+    rake test         # test all the things
 
-####[CLIFlags](lib/rototiller/task/flags/cli_flags.rb)
+    $) rake -D
+    rake parent_task
+        task dependencies work. this one also uses an environment variable
+    rake test
+        override command-name with environment variable
 
-  A class to contain the known CLI flags.
+    # added environment variable defaults are set, implicitly, if not found
+    #   this way, their value can be used in the task
+    $) rake test
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
+    i am testing everything with $RANDOM_VAR = default value
+    The CLI flag -f will be used with value Rakefile.
+
+    $) rake parent_task RANDOM_VAR=redrum
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
+    i am testing everything with $RANDOM_VAR = redrum
+
+    $) rake test ECHO_EXECUTABLE='ls' --verbose
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
+    echo 'i am testing everything with $RANDOM_VAR = default value'
+    i am testing everything with $RANDOM_VAR = default value
+    The CLI flag -f will be used with value Rakefile.
+
+    ls -f Rakefile
+    Rakefile
+
+    $) rake test_flag_env
+    The CLI flag -f will be used with value Rakefile.
+    $) echo $?
+    0
+
+    $) rake test_flag_env --verbose
+    The CLI flag -f will be used with value Rakefile.
+
+    test -f Rakefile
+
+    $) rake test_flag_env --verbose FLAG_VALUE='README.md'
+    The CLI flag -f will be used with value README.md.
+
+    test -f README.md
+
+    $) rake test_flag_env --verbose FLAG_VALUE='nonesuch'
+    The CLI flag -f will be used with value README.md.
+
+    test -f README.md
+    test -f nonesuch failed
+
+    $) rake test_arg_env
+    Rakefile
+
+    $) rake test_arg_env FILENAME=README.md
+    README.md
+
+## Issues
+
+* none. it's perfect
+* [Jira: Rototiller](https://tickets.puppetlabs.com/issues/?jql=project%20%3D%20QA)
 
 ## More Documentation
 
 Rototiller is documented using yard
-to view yard docs
+to view yard docs, including internal Classes and Modules:
 
 First build a local copy of the gem
 
-    $ bundle exec rake build
+    $) bundle exec rake build
 
 Next start the yard server
 
-    $ bundle exec yard server
+    $) bundle exec yard server
 
 Finally navigate to http://0.0.0.0:8808/ to view the documentation
 
 ## Maintainers
-* [Zach Reichert](zach.reichert@puppetlabs.com)
-* [Eric Thompson](erict@puppetlabs.com)
+* [Zach Reichert](zach.reichert@puppetlabs.com), github:[zreichert](https://github.com/zreichert), jira:zach.reichert
+* [Eric Thompson](erict@puppetlabs.com), github:[er0ck](https://github.com/er0ck), jira:erict
 * [QA](qa-team@puppetlabs.com)
