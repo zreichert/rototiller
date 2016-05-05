@@ -219,6 +219,7 @@ module Rototiller::Task
         let(:argument) {random_string}
         let(:command_env) {unique_env}
         let(:argument_env) {unique_env}
+        let(:flag_override_env) {unique_env}
         let(:add_flag_args) { {:name => '--flag', :default => 'flag_value'} }
         let(:args) { {:name => echo_command, :argument => argument, :override_env => command_env, :argument_override_env => argument_env} }
         context 'variables not set' do
@@ -241,12 +242,29 @@ module Rototiller::Task
             ENV[command_env] = "echo #{command_env_value}"
             ENV[argument_env] = argument_env_value
 
+
             task.add_command(args)
             task.add_flag(add_flag_args)
             task.send(:set_verbose)
 
             expect { described_run_task }
             .to output(/#{command_env_value} #{add_flag_args[:name]} #{add_flag_args[:default]} #{argument_env_value}/)
+            .to_stdout
+          end
+        end
+        context 'flag with no value, required=false' do
+          it 'should not include the non required flag with no value' do
+            flag_override_env_value = ''
+            ENV[flag_override_env] = flag_override_env_value
+
+            task.add_command(args)
+            add_flag_args[:required] = false
+            add_flag_args[:override_env] = flag_override_env
+            task.add_flag(add_flag_args)
+            task.send(:set_verbose)
+
+            expect { described_run_task }
+            .to output(/#{command} #{argument}/)
             .to_stdout
           end
         end

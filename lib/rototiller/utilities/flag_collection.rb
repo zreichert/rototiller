@@ -14,7 +14,9 @@ class FlagCollection < ParamCollection
     flag_str = String.new
 
     @collection.each do |flag|
-      if flag.value.nil?
+      if (flag.value.nil? || flag.value.empty?) && !flag.required
+        #do nothing
+      elsif flag.value.nil?
         flag_str << flag.flag << ' '
       else
         flag_str << flag.flag << ' ' << flag.value << ' '

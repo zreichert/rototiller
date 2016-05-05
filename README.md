@@ -48,6 +48,19 @@ Rototiller provides a Rake DSL addition called 'rototiller_task' which is a full
       end
     end
 
+    desc "do not include flag if the final value (either the default or override_env) is nil or empty and not required"
+    rototiller_task :test_flag_env do |task|
+      task.add_command do |cmd|
+        cmd.name = 'test'
+      end
+      task.add_flag do |flag|
+        flag.name         = '-f'
+        flag.default      = ''
+        flag.override_env = 'FLAG_VALUE'
+        flag.required     = false
+      end
+    end
+
     desc "override command argument values with environment variables"
     rototiller_task :test_arg_env do |task|
       task.add_command do |cmd|
