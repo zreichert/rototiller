@@ -1,7 +1,13 @@
+require 'rototiller/version'
+
+gem_name = "rototiller-#{Rototiller::Version::STRING}.gem"
+teardown do
+  `rm #{gem_name}`
+end
+
 sut = find_only_one('agent')
 
-# copy dir to SUT
-source_path = File.expand_path('./')
-excludes = ['.bundle', '.rubocop.yml', '.git', 'coverage', '.gitignore',
-                  'Gemfile.lock', 'junit', 'log']
-scp_to(sut, source_path, '/root', {:ignore => excludes})
+`gem build rototiller.gemspec`
+scp_to(sut, gem_name, '/root')
+
+on(sut, "gem install #{gem_name}")
