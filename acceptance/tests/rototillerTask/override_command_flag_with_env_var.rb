@@ -1,9 +1,11 @@
 require 'beaker/hosts'
 require 'rakefile_tools'
+require 'test_utilities'
 
 test_name 'C97798: existing workflows shall be supported for using ENV vars to override command flags' do
   extend Beaker::Hosts
   extend RakefileTools
+  extend TestUtilities
 
   def create_rakefile_task_segment(flags)
     segment = ''
@@ -95,12 +97,46 @@ end
 
       on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
         # exit code & no error in output
-        assert(result.exit_code == 1, 'The expected exit code 0 was not observed')
+        assert(result.exit_code == 1, 'The expected exit code 1 was not observed')
         assert_no_match(/error/i, result.output, 'An unexpected error was observed')
 
         command_flags.each do |flag|
           regex = /The CLI flag #{flag[:name]} needs a value.\nYou can specify this value with the environment variable #{flag[:override_env]}/
           assert_match(regex, result.stdout, "The expected output from rototiller was not observed")
+        end
+      end
+    end
+  end
+
+  step 'Test flags that are not required' do
+    override = random_string
+    command_flags = [
+        {:name => '--not-required', :override_env => 'required_override', :required => false},
+        {:name => '--not-required-with-default', :override_env => override, :default => 'def_val', :required => false},
+    ]
+
+    @task_name    = 'command_flags_that_stop_rake'
+    rakefile_contents = <<-EOS
+$LOAD_PATH.unshift('/root/rototiller/lib')
+require 'rototiller'
+
+Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
+    #{create_rakefile_task_segment(command_flags)}
+    t.add_command({:name => 'echo'})
+end
+    EOS
+    rakefile_path = create_rakefile_on(sut, rakefile_contents)
+
+    step 'Execute task defined in rake task' do
+
+      on(sut, "rake #{@task_name} #{override}=''", :accept_all_exit_codes => true) do |result|
+        # exit code & no error in output
+        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
+        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
+
+        command_flags.each do |flag|
+          regex = /The CLI flag #{flag[:name]} has no value assigned and will not be included./
+          assert_match(regex, result.stdout, "The expected output from rototiller for an optional flag was not observed.")
         end
       end
     end

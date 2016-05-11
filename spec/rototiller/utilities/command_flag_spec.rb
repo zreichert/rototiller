@@ -76,5 +76,38 @@ describe CommandFlag do
         expect(subject.message).to match(expected_message)
       end
     end
+
+    context 'not required, no value provided' do
+      override_env_val = random_string
+      let(:args) { {:name => flag, :override_env => override_env_val, :message => message, :required => false} }
+
+      it 'should report that the flag will not be used' do
+        expected_message = /The CLI flag #{flag} has no value assigned and will not be included./
+        expect(subject.message).to match(expected_message)
+      end
+    end
+
+    context 'not required, value provided, override value to nothing' do
+      override_env_val = random_string
+      let(:args) { {:name => flag, :override_env => override_env_val, :default => 'foo', :message => message, :required => false} }
+      ENV[override_env_val] = ''
+
+      it 'should report that the flag will not be used' do
+        expected_message = /The CLI flag #{flag} has no value assigned and will not be included./
+        expect(subject.message).to match(expected_message)
+      end
+    end
+
+    context 'not required, value provided, override value' do
+      override_env_val = random_string
+      value = random_string
+      let(:args) { {:name => flag, :override_env => override_env_val, :default => 'foo', :message => message, :required => false} }
+      ENV[override_env_val] = value
+
+      it 'should report that the flag will not be used' do
+        expected_message = /The CLI flag #{flag} will be used with value #{value}./
+        expect(subject.message).to match(expected_message)
+      end
+    end
   end
 end

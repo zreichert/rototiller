@@ -46,12 +46,13 @@ module Rototiller
       # @option args [String] :name The environment variable
       # @option args [String] :default The default value for the environment variable
       # @option args [String] :message A message describing the use of this variable
+      # @option args [Boolean] :required Is used internally by CommandFlag, ignored for a standalone EnvVar
       #
       # for block {|a| ... }
       # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods track hash keys
       def add_env(*args,&block)
         raise ArgumentError.new("add_env takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message]
+        attributes = [:name, :default, :message, :required]
         add_param(@env_vars, EnvVar, attributes, args, {:set_env => true}, &block)
       end
 
@@ -61,17 +62,19 @@ module Rototiller
       # @option args [String] :value The value for the command line flag
       # @option args [String] :message A message describing the use of this command line flag
       # @option args [String] :override_env An environment variable used to override the flag value
+      # @option args [Boolean] :required Indicates whether an error should be raised
+      # if the value is nil or empty string, vs not including the flag.
       #
       # for block {|a| ... }
       # @yield [a] Optional block syntax allows you to specify information about the command line flag, available methods track hash keys
       def add_flag(*args, &block)
         raise ArgumentError.new("add_flag takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message, :override_env]
+        attributes = [:name, :default, :message, :override_env, :required]
         add_param(@flags, CommandFlag, attributes, args, &block)
       end
 
       # adds command to be executed by task
-      # @param [Hash] args hash of information about the command to be exedcuted
+      # @param [Hash] args hash of information about the command to be executed
       # @option arg [String] :name The command to be executed
       # @option arg [String] :override_env An environment variable used to override the command to be executed by the task
       #

@@ -1,10 +1,20 @@
 require 'rototiller/utilities/color_text'
 
 class EnvVar
-  MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2}
+  MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
   include ColorText
 
-  attr_accessor :var, :message, :default
+  # @return [String] the value of the :name argument
+  attr_accessor :var
+
+  # @return [String] the value of the :message argument
+  attr_accessor :message
+
+  # @return [String] the value of the :default argument
+  attr_accessor :default
+
+  # @return  [true, nil] If the env_var should error if no value is set. Used internally by CommandFlag, ignored for standalone EnvVar.
+  attr_reader :required
 
   # @return [Symbol] the debug level of the message, ':warning', ':error', ':info'
   attr_reader :message_level
@@ -20,12 +30,15 @@ class EnvVar
   # @option attribute_hash [String] :name The environment variable
   # @option attribute_hash [String] :default The default value for the environment variable
   # @option attribute_hash [String] :message A message describing the use of this variable
+  # @option attribute_hash [Boolean] :required Used internally by CommandFlag, ignored for a standalone EnvVar
   def initialize(attribute_hash)
     raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
     @var = attribute_hash[:name]
     @message = attribute_hash[:message]
     @default = attribute_hash[:default]
     @set_env = attribute_hash[:set_env] || false
+    attribute_hash[:required].is_a?(String) ? attribute_hash[:required] = (attribute_hash[:required].downcase == 'true') : attribute_hash[:required]
+    @required = ( !!attribute_hash[:required] == attribute_hash[:required] ? attribute_hash[:required] : true)
 
     reset
   end
@@ -44,6 +57,9 @@ class EnvVar
     if get_message_type == MESSAGE_TYPES[:default_noexist]
       return yellow_text("#{message_prepend} is not set. Proceeding with default value: '#{@default}': #{@message}")
     end
+    if get_message_type == MESSAGE_TYPES[:not_required]
+      return yellow_text("#{message_prepend} is not set, but is not required. Proceeding with no flag: #{@message}")
+    end
     if get_message_type == MESSAGE_TYPES[:exist]
       return green_text("#{message_prepend} was found with value: '#{ENV[@var]}': #{@message}")
     end
@@ -52,6 +68,7 @@ class EnvVar
     end
   end
 
+  # If any of these variables are assigned a new value after this object's creation, reset @value and @message_level.
   def var=(var)
     @var = var
     reset
@@ -64,6 +81,11 @@ class EnvVar
 
   def message=(message)
     @message = message
+    reset
+  end
+
+  def required=(required)
+    @required = required
     reset
   end
 
@@ -80,7 +102,9 @@ class EnvVar
   end
 
   def get_message_type
-    if !@default && !check
+    if (value.nil? || value.empty?) && !required
+      MESSAGE_TYPES[:not_required]
+    elsif !@default && !check
       # ENV is not Present and it has no default value
       MESSAGE_TYPES[:nodefault_noexist]
     elsif check
@@ -93,18 +117,14 @@ class EnvVar
   end
 
   def set_message_level
-    if get_message_type == MESSAGE_TYPES[:nodefault_noexist]
-      # ENV is not Present and it has no default value
-      @message_level = :error
-      @stop = true
-    elsif get_message_type == MESSAGE_TYPES[:exist]
-      # ENV is present and it has no default value
-      @message_level = :info
-    elsif get_message_type == MESSAGE_TYPES[:default_noexist]
-      # ENV is not present and it has default value
-      @message_level = :info
-    else
-      raise 'EnvVar: message type not supported'
+    case get_message_type
+      when MESSAGE_TYPES[:nodefault_noexist]
+        @message_level = :error
+        @stop = true
+      when MESSAGE_TYPES[:exist], MESSAGE_TYPES[:default_noexist], MESSAGE_TYPES[:not_required]
+        @message_level = :info
+      else
+        raise 'EnvVar: message type not supported'
     end
   end
 end
