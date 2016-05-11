@@ -42,7 +42,7 @@ module Rototiller
       end
 
       # adds environment variables to be tracked
-      # @param [Hash] *args hashes of information about the environment variable
+      # @param [Hash] args hashes of information about the environment variable
       # @option args [String] :name The environment variable
       # @option args [String] :default The default value for the environment variable
       # @option args [String] :message A message describing the use of this variable
@@ -57,7 +57,7 @@ module Rototiller
       end
 
       # adds command line flags to be used in a command
-      # @param [Hash] *args hashes of information about the command line flag
+      # @param       [Hash]   args          hashes of information about the command line flag
       # @option args [String] :name         The command line flag
       # @option args [String] :value        The value for the command line flag
       # @option args [String] :message      A message describing the use of this command line flag
@@ -93,6 +93,7 @@ module Rototiller
 
       private
 
+      # @private
       def print_messages
         puts @flags.format_messages
         puts @env_vars.format_messages
@@ -139,6 +140,7 @@ module Rototiller
         @verbose = verbosity
       end
 
+      # @private
       def add_param(collection, param_class, param_array, args, opts={}, &block)
 
         if block_given?
@@ -158,6 +160,7 @@ module Rototiller
         end
       end
 
+      # @private
       def pull_params_from_block(param_array, &block)
 
         block_syntax_obj = Rototiller::Block_syntax.new(param_array)
