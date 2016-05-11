@@ -150,7 +150,8 @@ module Rototiller
 
           args.each do |arg|
 
-            raise ArgumentError.new("Argument must ba a Hash not a #{arg.class}") unless arg.is_a?(Hash)
+            #FIXME: add a test for this
+            raise ArgumentError.new("Argument must be a Hash. Received: '#{arg.class}'") unless arg.is_a?(Hash)
             arg[:set_env] = true if opts[:set_env]
             collection.push(param_class.new(arg))
           end
