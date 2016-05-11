@@ -120,10 +120,20 @@ module Rototiller::Task
       end
 
       # TODO: reduce repetition
+      #   actually most of these are covered in command_flag_spec
+      #   this should just test that it accepts the given args?
       context 'with flags' do
         let(:command) {'nonesuch'}
         let(:flag1) {'--flagoner'}
         let(:value) {'I am a value'}
+
+        it 'should work with correct arguments' do
+          args = {:name => flag1, :default => value, :message => 'blah',
+                  :is_boolean => true, :override_env => 'WAT'}
+          expect{ task.add_flag(args) }.not_to raise_error
+        end
+
+
         it "renders cli for '#{init_method}' with one flag" do
           arg = {:name => flag1, :message => 'description', :default => value}
           task.add_command({:name => command})
@@ -152,7 +162,7 @@ module Rototiller::Task
         it "prints messages for '#{init_method}' with single value CLI flag" do
           task.add_flag({:name => '-t', :message =>  '-t description', :default =>  'tvalue2'})
           expect{ described_run_task }
-            .to output(/-t description.*CLI flag -t will be used with value/m)
+            .to output(/-t description.*CLI flag '-t' will be used with value 'tvalue2'/m)
             .to_stdout
         end
         it "raises argument error for too many flag args" do
