@@ -42,7 +42,7 @@ module Rototiller
       end
 
       # adds environment variables to be tracked
-      # @param [Hash] *args hashes of information about the environment variable
+      # @param [Hash] args hashes of information about the environment variable
       # @option args [String] :name The environment variable
       # @option args [String] :default The default value for the environment variable
       # @option args [String] :message A message describing the use of this variable
@@ -57,19 +57,20 @@ module Rototiller
       end
 
       # adds command line flags to be used in a command
-      # @param [Hash] *args hashes of information about the command line flag
-      # @option args [String] :name The command line flag
-      # @option args [String] :value The value for the command line flag
-      # @option args [String] :message A message describing the use of this command line flag
+      # @param       [Hash]   args          hashes of information about the command line flag
+      # @option args [String] :name         The command line flag
+      # @option args [String] :value        The value for the command line flag
+      # @option args [String] :message      A message describing the use of this command line flag
       # @option args [String] :override_env An environment variable used to override the flag value
-      # @option args [Boolean] :required Indicates whether an error should be raised
-      # if the value is nil or empty string, vs not including the flag.
+      # @option args [Boolean] :required    Indicates whether an error should be raised
+      #                                     if the value is nil or empty string, vs not including the flag.
+      # @option args [Boolean] :is_boolean  Is the flag really a switch? Is it a boolean-flag?
       #
       # for block {|a| ... }
       # @yield [a] Optional block syntax allows you to specify information about the command line flag, available methods track hash keys
       def add_flag(*args, &block)
         raise ArgumentError.new("add_flag takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message, :override_env, :required]
+        attributes = [:name, :default, :message, :override_env, :required, :is_boolean]
         add_param(@flags, CommandFlag, attributes, args, &block)
       end
 
@@ -92,6 +93,7 @@ module Rototiller
 
       private
 
+      # @private
       def print_messages
         puts @flags.format_messages
         puts @env_vars.format_messages
@@ -138,6 +140,7 @@ module Rototiller
         @verbose = verbosity
       end
 
+      # @private
       def add_param(collection, param_class, param_array, args, opts={}, &block)
 
         if block_given?
@@ -149,13 +152,15 @@ module Rototiller
 
           args.each do |arg|
 
-            raise ArgumentError.new("Argument must ba a Hash not a #{arg.class}") unless arg.is_a?(Hash)
+            #FIXME: add a test for this
+            raise ArgumentError.new("Argument must be a Hash. Received: '#{arg.class}'") unless arg.is_a?(Hash)
             arg[:set_env] = true if opts[:set_env]
             collection.push(param_class.new(arg))
           end
         end
       end
 
+      # @private
       def pull_params_from_block(param_array, &block)
 
         block_syntax_obj = Rototiller::Block_syntax.new(param_array)

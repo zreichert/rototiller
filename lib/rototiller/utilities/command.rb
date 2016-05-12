@@ -20,22 +20,22 @@ module Rototiller
     # @param [Hash] attribute_hash hashes of information about the command
     # @option attribute_hash [String] :command The command
     # @option attribute_hash [String] :override_env The environment variable that can override this command
-    def initialize(h = {})
+    def initialize(attribute_hash = {})
 
       # check if an override_env is provided
-      if h[:override_env]
-        @override_env = EnvVar.new({:name => h[:override_env], :default => h[:name]})
+      if attribute_hash[:override_env]
+        @override_env = EnvVar.new({:name => attribute_hash[:override_env], :default => attribute_hash[:name]})
         @name = @override_env.value
       else
-        @name = h[:name]
+        @name = attribute_hash[:name]
       end
 
       # check if an argument_override_env is provided
-      if h[:argument_override_env]
-        @argument_override_env = EnvVar.new({:name => h[:argument_override_env], :default => h[:argument]})
+      if attribute_hash[:argument_override_env]
+        @argument_override_env = EnvVar.new({:name => attribute_hash[:argument_override_env], :default => attribute_hash[:argument]})
         @argument = @argument_override_env.value
       else
-        @argument = h[:argument]
+        @argument = attribute_hash[:argument]
       end
     end
   end

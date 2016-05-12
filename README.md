@@ -48,7 +48,7 @@ Rototiller provides a Rake DSL addition called 'rototiller_task' which is a full
       end
     end
 
-    desc "do not include flag if the final value (either the default or override_env) is nil or empty and not required"
+    desc "do not include flag if the final value (either the default or override_env) is nil or empty and not required. add and control switches or boolean flags"
     rototiller_task :test_flag_env do |task|
       task.add_command do |cmd|
         cmd.name = 'test'
@@ -59,7 +59,15 @@ Rototiller provides a Rake DSL addition called 'rototiller_task' which is a full
         flag.override_env = 'FLAG_VALUE'
         flag.required     = false
       end
+      # examples:
+      # add a boolean option (switch)
+      #task.add_flag({:name => '--switch1', :is_boolean => true})
+      # add a switch which defaults to "off"
+      #task.add_flag({:name => '-s',  :default => '', :is_boolean => true})
+      # add a switch with environment override
+      #task.add_flag({:name => '--switch3', :is_boolean => true, :override_env => 'TEST_FLAG_ENV_SWITCH3'})
     end
+
 
     desc "override command argument values with environment variables"
     rototiller_task :test_arg_env do |task|

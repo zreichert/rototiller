@@ -38,9 +38,10 @@ test_name 'C97798: existing workflows shall be supported for using ENV vars to o
 
   step 'Test flags that will let command continue' do
 
+    test_filename = File.basename(__FILE__, '.*')
     command_flags = [
-        {:name => '--setenv-nodefault', :override_env => 'NODEFAULT', :exists => true},
-        {:name => '--setenv-default', :block_syntax => true, :exists => true, :default => 'Author specified default'},
+      {:name => '--setenv-nodefault', :override_env => "NODEFAULT_#{test_filename.upcase}", :exists => true},
+      {:name => '--setenv-default', :block_syntax => true, :exists => true, :default => 'Author specified default'},
     ]
 
 
@@ -65,7 +66,7 @@ end
         command_flags.each do |flag|
           value = flag[:default] || "#{flag[:override_env]}: env present value"
           command_regex = /#{flag[:name]} #{value}/
-          rototiller_output_regex = /The CLI flag #{flag[:name]} will be used with value #{value}/
+          rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{value}'/
 
           assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
           assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
@@ -101,7 +102,7 @@ end
         assert_no_match(/error/i, result.output, 'An unexpected error was observed')
 
         command_flags.each do |flag|
-          regex = /The CLI flag #{flag[:name]} needs a value.\nYou can specify this value with the environment variable #{flag[:override_env]}/
+          regex = /The CLI flag '#{flag[:name]}' needs a value.\nYou can specify this value with the environment variable '#{flag[:override_env]}'/
           assert_match(regex, result.stdout, "The expected output from rototiller was not observed")
         end
       end
@@ -131,8 +132,8 @@ end
 
       on(sut, "rake #{@task_name} #{override}=''", :accept_all_exit_codes => true) do |result|
         # exit code & no error in output
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
+        assert(result.exit_code == 0, 'The expected exit code 0 was not observed, (non-required flags)')
+        assert_no_match(/error/i, result.output, 'An unexpected error was observed (non-required flags)')
 
         command_flags.each do |flag|
           regex = /The CLI flag #{flag[:name]} has no value assigned and will not be included./
