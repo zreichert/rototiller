@@ -2,6 +2,10 @@
 
 A [Rake](https://github.com/ruby/rake) helper for command-oriented tasks.
 
+:warning: This version of Rototiller should be considered of _beta_ quality.
+It is already known that the API will change quite a bit for the next release.
+Please see the notes at the top of the [Write](#write) section.
+
 * simplifies the building of command strings in :rototiller_task for task authors
 * abstracts the overriding of command string components: commands, flags, arguments for task users
 * unifies and standardizes messaging surrounding the use of environment variables for task operations
@@ -11,12 +15,23 @@ A [Rake](https://github.com/ruby/rake) helper for command-oriented tasks.
 * Reduce time and effort trying to understand requirement to run rake tasks.
 * Provide a standard interface for executing tests in a given test tier regardless of framework (Not MVP)
 
+<a name="install"></a>
 ## Install
     gem install rototiller
 
+<a name="write"></a>
 ## Write
 Rototiller provides a Rake DSL addition called 'rototiller_task' which is a fully featured Rake task with environment variable handling, messaging and command-string-building functionality.
 
+:warning: The API below will change for the next release.
+The known changes include (not comprehensive):
+* moving `#add_flag` to `Command` and renaming it `#add_option`
+* adding `#add_env` to `Command` and `#add_option`, so one can add multiple environment variables
+* adding `#add_switch` to Command so one does not have to use the `:is_boolean` parameter for `#add_flag`
+* adding some sort of env_var type so one does not have to use the `:required` parameter for `#add_flag`
+* the above will allow for multiple commands in a task with independent option, switch, and environment variable tracking
+
+Examples (see the [Use](#use) section for outputs):
     require 'rototiller'
 
     desc "task dependencies work. this one also uses an environment variable"
@@ -70,6 +85,7 @@ Rototiller provides a Rake DSL addition called 'rototiller_task' which is a full
       end
     end
 
+<a name="use"></a>
 ## Use
 (with the above sample Rakefile)
 
