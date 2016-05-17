@@ -168,6 +168,11 @@ module Rototiller::Task
         it "raises argument error for too many flag args" do
           expect{ task.add_flag('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
         end
+        it "raises argument error when flags used with no command" do
+          task.add_command({:name => nil})
+          task.add_flag({:name => '--blah', :default => ''})
+          expect{ described_run_task }.to raise_error(ArgumentError)
+        end
       end
       context 'with env vars' do
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())

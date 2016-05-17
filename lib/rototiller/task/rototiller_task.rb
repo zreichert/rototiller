@@ -104,6 +104,7 @@ module Rototiller
       # @private
       def run_task
         print_messages
+        raise ArgumentError.new("flags set with no command") if @flags && !@command.name
         command_str = [
             (@command.name if @command.name), @flags.to_s, (@command.argument if @command.argument)
         ].delete_if{ |i| [nil, '', false].any?{|forbidden| i == forbidden}}.join(' ')
