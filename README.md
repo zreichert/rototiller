@@ -31,7 +31,140 @@ The known changes include (not comprehensive):
 * adding some sort of env_var type so one does not have to use the `:required` parameter for `#add_flag`
 * the above will allow for multiple commands in a task with independent option, switch, and environment variable tracking
 
-Examples (see the [Use](#use) section for outputs):
+Rototiller has 4 main _types_ of arguments that can be passed to a command in a task. `RototillerTasks` can accept multiple commands.  Each of these argument types has a similar API that looks similar to `add_command()`.
+### All permutations of v2 API (remove and refactor into useful doc sections below upon testing, merge-up to stable)
+
+* all things that can take multiples should use add\_ as precursor to method name
+* all things that only take one should use set\_ as precursor to method name?
+    require 'rototiller'
+
+    ## all task methods
+    rototiller_task :name do |t|
+      t.add_command # t.add_cmd? me no likey
+      t.add_env
+    end
+    rototiller_task do |t|
+      t.set_name = 'string_name' # should this be validated??  e.g.: spaces, etc
+      t.add_command
+      t.add_env
+    end
+
+
+    ## all task's add_env invocations with just name
+    t.add_env('env_name') #required, default messaging
+    t.add_env({:name => 'env_name'})
+    t.add_env :env_name
+    t.add_env 'env_name' # implicitly allowed by ruby
+    t.add_env do |e|
+      e.name
+    end
+
+    ## all task's add_env invocations with name, message
+    #t.add_env('env_name')  # impossible
+    t.add_env({:name => 'env_name', :message})
+    t.add_env :env_name do |e|
+    t.add_env 'env_name' do |e|  # should we do this too?
+      e.set_message
+    end
+    t.add_env do |e|
+      e.name
+      e.message
+    end
+
+    ## all task's add_env invocations with name, value
+    #t.add_env('env_name')  # impossible
+    t.add_env({:name => 'env_name', :default/:value =>}) # optional; default messaging
+    t.add_env :env_name do |e|
+    t.add_env 'env_name' do |e|  # should we do this too?
+      e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
+    end
+    t.add_env do |e|
+      e.name
+      e.default/value
+    end
+
+    ## all task's add_env invocations with name, value, message
+    #t.add_env('env_name')  # impossible
+    t.add_env({:name => 'env_name', :default/:value =>, :message})
+    t.add_env :env_name do |e|
+      e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
+      e.message
+    end
+    t.add_env do |e|
+      e.name
+      e.default/value
+      e.message
+    end
+
+
+    ## all task's add_command invocations with only name
+    # default messaging, no env override?
+    t.add_command('echo --blah my name is ray')
+    t.add_command({:name => 'echo'})
+    t.add_command :echo
+    t.add_command 'echo'
+    t.add_command do |c|
+      c.name = 'echo'
+    end
+
+    ## all task's add_command invocations with name (string), message
+    #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
+    t.add_command({:name => 'echo', :message => 'blah'})
+    t.add_command :echo
+    t.add_command 'echo' do |c|
+      c.name = 'echo' # # nomethod error?
+      c.message = 'why we echo'
+    end
+    t.add_command do |c|
+      c.name = 'echo'
+      c.message = 'blah'
+    end
+
+    ## all task's add_command invocations with name (block) (could be same for message?)
+    #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
+    t.add_command({:name => {some block?}, :message => 'blah'})
+    #t.add_command :echo
+    #t.add_command 'echo' do |c|
+    #  c.message = 'blah'
+    #end
+    t.add_command do |c|
+      c.name 'echo' do |n|
+        n.add_env
+      end
+      c.add_arg 'some_arg' do |a|
+        a.add_env
+        a.message
+      end
+      c.add_option '--option_name' do |o|
+        o.add_arg 'switch_arg' do |a|
+          a.add_env 'opion-arg_env' do |e|
+            e.set_name
+            e.set_message
+            e.set_value
+          end
+        end
+        o.add_env 'option-name_env' do |e|
+          e.set_name
+          e.set_message
+          e.set_value
+        end
+        o.message
+      end
+      c.add_switch '--some_switch' do |s|
+        s.add_env 'env_name' do |e|
+          e.set_name
+          e.set_message
+          e.set_value
+        end
+        s.message
+      end
+    end
+
+    #should we be able to add an env for any given message?  i don't see a use case, we should probably just save users from themselves here.
+
+
+
+### Examples (see the [Use](#use) section for outputs):
     require 'rototiller'
 
     desc "task dependencies work. this one also uses an environment variable"
