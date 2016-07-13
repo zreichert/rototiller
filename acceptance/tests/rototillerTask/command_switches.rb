@@ -56,7 +56,7 @@ end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-  execute_task_on(sut, @task_name) do |result|
+  execute_task_on(sut, @task_name, rakefile_path) do |result|
     # i plainly refuse to re-implement rototiller's is_boolean option logic here
     expected_out = <<-HERE
 \e[32mThe CLI switch '--name1' will be used.\e[0m

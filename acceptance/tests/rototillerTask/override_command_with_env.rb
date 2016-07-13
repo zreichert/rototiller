@@ -23,7 +23,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
     sut.add_env_var(override_env, env_value)
 
-    execute_task_on(sut, @task_name) do |result|
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
       # command was used that was supplied by the override_env
       assert_match(/^#{env_key}/, result.stdout, 'The correct command was not observed')
     end
@@ -45,7 +45,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    execute_task_on(sut, @task_name) do |result|
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
       assert_match(/#{validation_string}/, result.stdout, 'The correct command was not observed')
     end
   end

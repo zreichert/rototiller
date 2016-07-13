@@ -26,11 +26,11 @@ end
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
     task_name = 'r_parent'
-    execute_task_on(sut, task_name) do |result|
+    execute_task_on(sut, task_name, rakefile_path) do |result|
       assert_match(/tiller child.*native child.*tiller parent/m, result.output, 'r_parent: not all children were called')
     end
     task_name = 'parent'
-    execute_task_on(sut, task_name) do |result|
+    execute_task_on(sut, task_name, rakefile_path) do |result|
       assert_match(/tiller child.*native child.*native parent/m, result.output, 'parent: not all children were called')
     end
   end

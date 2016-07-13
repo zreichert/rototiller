@@ -1,7 +1,7 @@
 module TestUtilities
 
   def random_string
-    (0...10).map { ('a'..'z').to_a[rand(26)] }.join.upcase
+    [*('a'..'z'),*('0'..'9')].shuffle[0,6].join
   end
 
   def set_random_env_on(host)
@@ -25,9 +25,11 @@ module TestUtilities
     return env_var
   end
 
-  def execute_task_on(host, task_name)
+  def execute_task_on(host, task_name=nil, rakefile_path=nil)
     step "Execute task '#{task_name}', ensure success"
-    on(host, "rake #{task_name}", :accept_all_exit_codes => true) do |result|
+    command = "rake #{task_name}"
+    command = command + " --rakefile #{rakefile_path}" if rakefile_path
+    on(host, command, :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")
       assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
       return result

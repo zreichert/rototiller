@@ -43,7 +43,7 @@ end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-  execute_task_on(sut, @task_name) do |result|
+  execute_task_on(sut, @task_name, rakefile_path) do |result|
     command_flags.each do |flag|
       command_regex = /#{flag[:name]} #{flag[:default]}/
       rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{flag[:default]}'/

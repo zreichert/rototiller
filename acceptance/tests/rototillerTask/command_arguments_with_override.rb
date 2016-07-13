@@ -30,7 +30,7 @@ end
     sut.add_env_var(override_env, env_value)
     sut.add_env_var(argument_override_env, argument_env_key)
 
-    execute_task_on(sut, @task_name) do |result|
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
       # command was used that was supplied by the override_env
       assert_match(/^#{env_key} #{argument_env_key}/, result.stdout, 'The correct command was not observed')
     end
@@ -57,7 +57,7 @@ end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    execute_task_on(sut, @task_name) do |result|
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
       command_regex = /#{validation_string} #{argument_validation_string}/
       assert_match(command_regex, result.stdout, 'The correct command was not observed')
     end

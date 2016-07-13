@@ -54,7 +54,7 @@ EOS
       end
     end
 
-    execute_task_on(sut, "#{task[:init_method]}#{task[:description]}") do |result|
+    execute_task_on(sut, "#{task[:init_method]}#{task[:description]}", rakefile_path) do |result|
       assert_match(/#{options[:init_method]}#{options[:description]} #{@task_body_string}/, result.stdout, "The expected output from the task '#{options[:init_method]}#{options[:description]}' was not observed")
     end
   end
