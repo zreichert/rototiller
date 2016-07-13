@@ -7,19 +7,19 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
 
   test_filename = File.basename(__FILE__, '.*')
 
-  def create_rakefile_task_segment(flags)
+  def create_rakefile_task_segment(switches)
     segment = ''
-    flags.each.with_index do |flag,index|
-      sut.add_env_var(flag[:override_env], flag[:env_value]) if flag[:override_env]
-      if flag[:block_syntax]
-        segment += "t.add_flag do |flag|\n"
-        remove_reserved_keys(flag).each do |k, v|
-          segment += "  flag.#{k.to_s} = '#{v}'\n"
+    switches.each.with_index do |switch,index|
+      sut.add_env_var(switch[:override_env], switch[:env_value]) if switch[:override_env]
+      if switch[:block_syntax]
+        segment += "t.add_flag do |switch|\n"
+        remove_reserved_keys(switch).each do |k, v|
+          segment += "  switch.#{k.to_s} = '#{v}'\n"
         end
         segment += "end\n"
       else
         segment += "  t.add_flag({"
-        remove_reserved_keys(flag).each do |k, v|
+        remove_reserved_keys(switch).each do |k, v|
           segment += ":#{k} => '#{v}',"
         end
         segment += "})\n"
@@ -36,7 +36,7 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
     return hash
   end
 
-  command_flags = [
+  command_switches = [
       {:name => '--name1',                  :is_boolean => true},
       {:name => '--name2',  :default => '', :is_boolean => true},
       {:name => '--name3',                  :is_boolean => true, :override_env => 'NODEFAULT1',  :env_value => 'VAL1'},
@@ -84,9 +84,9 @@ end
 \e[33mThe CLI switch '--nameC' will NOT be used.\e[0m
 
 --name1 VAL1 VAL2 --name7 VAL3 VAL4
-HERE
-      assert_equal(expected_out,result.output, 'output did not match')
+    HERE
+    assert_equal(expected_out,result.output, 'output did not match')
 
-    end
   end
+
 end
