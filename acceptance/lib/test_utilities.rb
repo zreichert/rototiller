@@ -34,4 +34,13 @@ module TestUtilities
     end
   end
 
+  RESERVED_KEYS = [:block_syntax, :env_value, :exists]
+  def remove_reserved_keys(h)
+    hash = h.dup
+    RESERVED_KEYS.each do |key|
+      hash.delete(key)
+    end
+    return hash
+  end
+
 end

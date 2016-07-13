@@ -27,14 +27,6 @@ test_name 'C97820: can set key/value flag in a RototillerTask' do
     return segment
   end
 
-  def remove_reserved_keys(h)
-    hash = h.dup
-    [:block_syntax].each do |key|
-      hash.delete(key)
-    end
-    return hash
-  end
-
   command_flags = [
       {:name => '--hash-syntax',  :default => 'wow such hash syntax'},
       {:name => '--use-a-block',   :default => 'wow much block syntax', :block_syntax => true}

@@ -30,14 +30,6 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
     return segment
   end
 
-  def remove_reserved_keys(h)
-    hash = h.dup
-    [:block_syntax, :env_value].each do |key|
-      hash.delete(key)
-    end
-    return hash
-  end
-
   command_switches = [
       {:name => '--name1',                  :is_boolean => true},
       {:name => '--name2',  :default => '', :is_boolean => true},

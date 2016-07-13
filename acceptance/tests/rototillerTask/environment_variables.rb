@@ -28,14 +28,6 @@ test_name 'C97797: ensure environment variable operation in RototillerTasks' do
     return segment
   end
 
-  def remove_reserved_keys(h)
-    hash = h.dup
-    [:block_syntax, :exists].each do |key|
-      hash.delete(key)
-    end
-    return hash
-  end
-
   step 'For environment variables that will succeed' do
     env_vars = [
       {:name => 'NO_DEFAULT-EXISTS',        :message => 'no default, previously exists',

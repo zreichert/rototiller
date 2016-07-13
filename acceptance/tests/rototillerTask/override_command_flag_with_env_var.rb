@@ -28,14 +28,6 @@ test_name 'C97798: existing workflows shall be supported for using ENV vars to o
     return segment
   end
 
-  def remove_reserved_keys(h)
-    hash = h.dup
-    [:block_syntax, :exists].each do |key|
-      hash.delete(key)
-    end
-    return hash
-  end
-
   step 'Test flags that will let command continue' do
 
     test_filename = File.basename(__FILE__, '.*')
