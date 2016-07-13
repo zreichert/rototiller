@@ -7,16 +7,14 @@ test_name 'C97795: ensure RototillerTasks can use arguments' do
 
   rake_task_name = 'sometask'
   rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
-rototiller_task :#{rake_task_name}, [:arg1, :arg2] do |t, args|
-  if args[:arg2]
-    t.add_command({:name => "echo 'task args: #\{args\}'"})
-  else
-    t.add_command({:name => "echo 'task arg1: #\{args[:arg1]\}'"})
-  end
-end
+    #{rototiller_rakefile_header}
+    rototiller_task :#{rake_task_name}, [:arg1, :arg2] do |t, args|
+      if args[:arg2]
+        t.add_command({:name => "echo 'task args: #\{args\}'"})
+      else
+        t.add_command({:name => "echo 'task arg1: #\{args[:arg1]\}'"})
+      end
+    end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 

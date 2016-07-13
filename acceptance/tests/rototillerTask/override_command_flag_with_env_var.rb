@@ -47,9 +47,7 @@ test_name 'C97798: existing workflows shall be supported for using ENV vars to o
 
     @task_name    = 'command_flags_with_override'
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(command_flags)}
     t.add_command({:name => 'echo'})
@@ -79,14 +77,12 @@ end
 
     # todo flags that will stop
     command_flags = [
-        {:name => '--unset-nodefault', :override_env => 'NOTSET'},
+      {:name => '--unset-nodefault', :override_env => 'NOTSET'},
     ]
 
     @task_name    = 'command_flags_that_stop_rake'
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(command_flags)}
     t.add_command({:name => 'echo'})
@@ -118,9 +114,7 @@ end
 
     @task_name    = 'command_flags_that_stop_rake'
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(command_flags)}
     t.add_command({:name => 'echo'})

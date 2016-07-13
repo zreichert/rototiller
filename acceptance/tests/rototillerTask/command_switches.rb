@@ -54,9 +54,7 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
 
   @task_name    = test_filename
   rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(command_flags)}
     t.add_command({:name => 'echo'})

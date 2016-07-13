@@ -41,12 +41,10 @@ test_name 'C97820: can set key/value flag in a RototillerTask' do
 
   @task_name    = 'command_flag_testing_key_value'
   rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
-    #{create_rakefile_task_segment(command_flags)}
-    t.add_command({:name => 'echo'})
+  #{create_rakefile_task_segment(command_flags)}
+  t.add_command({:name => 'echo'})
 end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)

@@ -13,4 +13,13 @@ module RakefileTools
     create_remote_file(sut, path_to_rakefile, rakefile_contents)
     return path_to_rakefile
   end
+
+  def rototiller_rakefile_header
+    header = <<-HEADER
+      $LOAD_PATH.unshift('/root/rototiller/lib')
+      require 'rototiller'
+
+    HEADER
+  end
+
 end

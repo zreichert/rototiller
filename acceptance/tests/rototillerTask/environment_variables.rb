@@ -52,9 +52,7 @@ test_name 'C97797: ensure environment variable operation in RototillerTasks' do
 
     @task_name    = 'env_var_testing_task'
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(env_vars)}
 end
@@ -93,9 +91,7 @@ end
        :exists => false},
     ]
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
     #{create_rakefile_task_segment(env_vars_fail)}
 end

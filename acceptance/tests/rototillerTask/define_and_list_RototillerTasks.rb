@@ -31,11 +31,7 @@ EOS
     {:init_method => :dsl, :description => 'yep'},
   ]
 
-  rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
-  EOS
+  rakefile_contents = rototiller_rakefile_header
 
   tasks.each do |task|
     rakefile_contents = rakefile_contents + create_rakefile_task_segment(task)

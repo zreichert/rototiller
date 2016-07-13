@@ -7,9 +7,7 @@ test_name 'C97794: ensure RototillerTasks can be parent/child tasks' do
 
   ['rototiller_task', 'Rototiller::Task::RototillerTask.define_task'].each do |new_task_method|
     rakefile_contents = <<-EOS
-  $LOAD_PATH.unshift('/root/rototiller/lib')
-  require 'rototiller'
-
+#{rototiller_rakefile_header}
 task :child do |t|
   system('echo "i am the native child"')
 end

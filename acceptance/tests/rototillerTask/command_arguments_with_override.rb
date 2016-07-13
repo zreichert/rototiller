@@ -19,9 +19,7 @@ test_name 'C97824: can set command arguments in a RototillerTask' do
 
     @task_name    = 'command_with_args_and_defaults'
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 rototiller_task :#{@task_name} do |t|
     t.add_command({:name => 'echo', :override_env => '#{override_env}', :argument => '#{default_arg}', :argument_override_env => '#{argument_override_env}'})
 end
@@ -50,9 +48,7 @@ end
     argument_validation_string = random_string
 
     rakefile_contents = <<-EOS
-$LOAD_PATH.unshift('/root/rototiller/lib')
-require 'rototiller'
-
+#{rototiller_rakefile_header}
 rototiller_task :#{@task_name} do |t|
     t.add_command do |c|
       c.name = 'echo #{validation_string}'
