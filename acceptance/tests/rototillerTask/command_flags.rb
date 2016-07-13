@@ -1,9 +1,11 @@
 require 'beaker/hosts'
 require 'rakefile_tools'
+require 'test_utilities'
 
 test_name 'C97820: can set key/value flag in a RototillerTask' do
   extend Beaker::Hosts
   extend RakefileTools
+  extend TestUtilities
 
   def create_rakefile_task_segment(flags)
     segment = ''
@@ -49,18 +51,13 @@ end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-  step 'Execute task defined in rake task' do
-    on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-      # exit code & no error in output
-      assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-      assert_no_match(/error/i, result.output, 'An unexpected error was observed')
-
-      command_flags.each do |flag|
-        command_regex = /#{flag[:name]} #{flag[:default]}/
-        rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{flag[:default]}'/
-        assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
-        assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
-      end
+  execute_task_on(sut, @task_name) do |result|
+    command_flags.each do |flag|
+      command_regex = /#{flag[:name]} #{flag[:default]}/
+      rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{flag[:default]}'/
+      assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
+      assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
     end
   end
+
 end

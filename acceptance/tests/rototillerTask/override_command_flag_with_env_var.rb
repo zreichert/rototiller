@@ -55,20 +55,14 @@ end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    step 'Execute task defined in rake task' do
-      on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-        # exit code & no error in output
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
+    execute_task_on(sut, @task_name) do |result|
+      command_flags.each do |flag|
+        value = flag[:default] || "#{flag[:override_env]}: env present value"
+        command_regex = /#{flag[:name]} #{value}/
+        rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{value}'/
 
-        command_flags.each do |flag|
-          value = flag[:default] || "#{flag[:override_env]}: env present value"
-          command_regex = /#{flag[:name]} #{value}/
-          rototiller_output_regex = /The CLI flag '#{flag[:name]}' will be used with value '#{value}'/
-
-          assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
-          assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
-        end
+        assert_match(command_regex, result.stdout, "The expected output from rototiller was not observed")
+        assert_match(rototiller_output_regex, result.stdout, "The flag #{flag[:name]} was not observed on the command line")
       end
     end
   end
@@ -91,9 +85,7 @@ end
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
     step 'Execute task defined in rake task' do
-
       on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-        # exit code & no error in output
         assert(result.exit_code == 1, 'The expected exit code 1 was not observed')
         assert_no_match(/error/i, result.output, 'An unexpected error was observed')
 
@@ -122,18 +114,12 @@ end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    step 'Execute task defined in rake task' do
-
-      on(sut, "rake #{@task_name} #{override}=''", :accept_all_exit_codes => true) do |result|
-        # exit code & no error in output
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed, (non-required flags)')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed (non-required flags)')
-
-        command_flags.each do |flag|
-          regex = /The CLI flag #{flag[:name]} has no value assigned and will not be included./
-          assert_match(regex, result.stdout, "The expected output from rototiller for an optional flag was not observed.")
-        end
+    execute_task_on(sut, @task_name) do |result|
+      command_flags.each do |flag|
+        regex = /The CLI flag #{flag[:name]} has no value assigned and will not be included./
+        assert_match(regex, result.stdout, "The expected output from rototiller for an optional flag was not observed.")
       end
     end
   end
+
 end

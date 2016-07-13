@@ -1,9 +1,11 @@
 require 'beaker/hosts'
 require 'rakefile_tools'
+require 'test_utilities'
 
 test_name 'C97827: can set envvar to override command name when using task.command' do
   extend Beaker::Hosts
   extend RakefileTools
+  extend TestUtilities
 
   step 'Test command with an override_env that has a value' do
 
@@ -21,24 +23,15 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
     sut.add_env_var(override_env, env_value)
 
-    step 'Execute task defined in rake task' do
-      on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-        # exit code & no error in output
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
-
-        # command was used that was supplied by the override_env
-        assert_match(/^#{env_key}/, result.stdout, 'The correct command was not observed')
-      end
+    execute_task_on(sut, @task_name) do |result|
+      # command was used that was supplied by the override_env
+      assert_match(/^#{env_key}/, result.stdout, 'The correct command was not observed')
     end
   end
 
   step 'Add Command with block syntax and unset override_env' do
-
     override_env = 'EMPTYENV'
-
     @task_name    = 'command_flags_with_override'
-
     validation_string = (0...10).map { ('a'..'z').to_a[rand(26)] }.join
 
     rakefile_contents = <<-EOS
@@ -52,14 +45,9 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    step 'Execute task defined in rake task' do
-      on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
-
-        assert_match(/#{validation_string}/, result.stdout, 'The correct command was not observed')
-      end
+    execute_task_on(sut, @task_name) do |result|
+      assert_match(/#{validation_string}/, result.stdout, 'The correct command was not observed')
     end
   end
+
 end

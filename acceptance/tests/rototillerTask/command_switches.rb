@@ -1,9 +1,11 @@
 require 'beaker/hosts'
 require 'rakefile_tools'
+require 'test_utilities'
 
 test_name 'C97821: can set switches (boolean options) for commands in a RototillerTask' do
   extend Beaker::Hosts
   extend RakefileTools
+  extend TestUtilities
 
   test_filename = File.basename(__FILE__, '.*')
 
@@ -56,20 +58,15 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
   rakefile_contents = <<-EOS
 #{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
-    #{create_rakefile_task_segment(command_flags)}
+    #{create_rakefile_task_segment(command_switches)}
     t.add_command({:name => 'echo'})
 end
   EOS
   rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-  step 'Execute task defined in rake task' do
-    on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-      # exit code & no error in output
-      assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-      assert_no_match(/error/i, result.output, 'An unexpected error was observed')
-
-      # i plainly refuse to re-implement rototiller's is_boolean option logic here
-      expected_out = <<-HERE
+  execute_task_on(sut, @task_name) do |result|
+    # i plainly refuse to re-implement rototiller's is_boolean option logic here
+    expected_out = <<-HERE
 \e[32mThe CLI switch '--name1' will be used.\e[0m
 \e[33mThe CLI switch '--name2' will NOT be used.\e[0m
 \e[32mThe CLI switch 'VAL1' will be used.\e[0m

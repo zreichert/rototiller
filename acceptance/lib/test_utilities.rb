@@ -11,7 +11,6 @@ module TestUtilities
   end
 
   def unique_env_on(host)
-
     env = {}
     env_var = random_string
 
@@ -25,4 +24,14 @@ module TestUtilities
     env_var = random_string until !env[env_var]
     return env_var
   end
+
+  def execute_task_on(host, task_name)
+    step "Execute task '#{task_name}', ensure success"
+    on(host, "rake #{task_name}", :accept_all_exit_codes => true) do |result|
+      assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")
+      assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
+      return result
+    end
+  end
+
 end

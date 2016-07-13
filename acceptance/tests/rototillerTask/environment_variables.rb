@@ -1,9 +1,11 @@
 require 'beaker/hosts'
 require 'rakefile_tools'
+require 'test_utilities'
 
 test_name 'C97797: ensure environment variable operation in RototillerTasks' do
   extend Beaker::Hosts
   extend RakefileTools
+  extend TestUtilities
 
   def create_rakefile_task_segment(envs)
     segment = ''
@@ -59,26 +61,20 @@ end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
-    step 'Execute task defined in rake task' do
-      on(sut, "rake #{@task_name}", :accept_all_exit_codes => true) do |result|
-        # exit code & no error in output
-        assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
-        assert_no_match(/error/i, result.output, 'An unexpected error was observed')
+    execute_task_on(sut, @task_name) do |result|
+      env_vars.each do |env|
+        # validate notification to user of ENV value
+        rototiller_message_match = env[:exists] ?
+          /INFO:.*'#{env[:name]}'.*value:.*present value': #{env[:message]}/m :
+          /INFO:.*'#{env[:name]}'.*value:.*notpresent default value': #{env[:message]}/
+          assert_match(rototiller_message_match, result.stdout,
+                       "The expected messaging was not observed for: '#{env[:name]}")
 
-        env_vars.each do |env|
-          # validate notification to user of ENV value
-          rototiller_message_match = env[:exists] ?
-            /INFO:.*'#{env[:name]}'.*value:.*present value': #{env[:message]}/m :
-            /INFO:.*'#{env[:name]}'.*value:.*notpresent default value': #{env[:message]}/
-            assert_match(rototiller_message_match, result.stdout,
-                         "The expected messaging was not observed for: '#{env[:name]}")
-
-            # Use test command output to validate value of ENV used by task
-            task_out_match = env[:exists] ? /#{env[:name]}: present value/m :
-              /#{env[:name]}: notpresent default value/m
-              assert_match(task_out_match, result.stdout,
-                           "The printed env was different than expected for: '#{env[:name]}'")
-        end
+          # Use test command output to validate value of ENV used by task
+          task_out_match = env[:exists] ? /#{env[:name]}: present value/m :
+            /#{env[:name]}: notpresent default value/m
+            assert_match(task_out_match, result.stdout,
+                         "The printed env was different than expected for: '#{env[:name]}'")
       end
     end
   end
