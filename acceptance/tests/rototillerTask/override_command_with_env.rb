@@ -13,7 +13,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     env_key = 'THIS_WAS_IN_ENV'
     env_value = 'echo ' << env_key
 
-    @task_name    = 'command_flags_with_override'
+    @task_name    = 'commands_with_override'
     rakefile_contents = <<-EOS
       #{rototiller_rakefile_header}
       Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
@@ -31,7 +31,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
 
   step 'Add Command with block syntax and unset override_env' do
     override_env = 'EMPTYENV'
-    @task_name    = 'command_flags_with_override'
+    @task_name    = 'commands_with_override_no_value'
     validation_string = (0...10).map { ('a'..'z').to_a[rand(26)] }.join
 
     rakefile_contents = <<-EOS
