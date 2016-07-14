@@ -7,30 +7,11 @@ test_name 'C97820: can set key/value flag in a RototillerTask' do
   extend RakefileTools
   extend TestUtilities
 
-  def create_rakefile_task_segment(flags)
-    segment = ''
-    flags.each do |flag|
-      if flag[:block_syntax]
-        segment += "t.add_flag do |flag|\n"
-        remove_reserved_keys(flag).each do |k, v|
-          segment += "  flag.#{k.to_s} = '#{v}'\n"
-        end
-        segment += "end\n"
-      else
-        segment += "  t.add_flag({"
-        remove_reserved_keys(flag).each do |k, v|
-          segment += ":#{k} => '#{v}',"
-        end
-        segment += "})\n"
-      end
-    end
-    return segment
-  end
-
   command_flags = [
-      {:name => '--hash-syntax',  :default => 'wow such hash syntax'},
-      {:name => '--use-a-block',   :default => 'wow much block syntax', :block_syntax => true}
+      {:name => '--hash-syntax', :default => 'wow such hash syntax'},
+      {:name => '--use-a-block', :default => 'wow much block syntax', :block_syntax => true}
   ]
+  command_flags = command_flags.each{|e| e[:type] = :option }
 
 
   @task_name    = 'command_flag_testing_key_value'

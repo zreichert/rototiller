@@ -7,34 +7,14 @@ test_name 'C97798: existing workflows shall be supported for using ENV vars to o
   extend RakefileTools
   extend TestUtilities
 
-  def create_rakefile_task_segment(flags)
-    segment = ''
-    flags.each do |flag|
-      sut.add_env_var(flag[:override_env], "#{flag[:override_env]}: env present value") if flag[:exists]
-      if flag[:block_syntax]
-        segment += "t.add_flag do |flag|\n"
-        remove_reserved_keys(flag).each do |k, v|
-          segment += "  flag.#{k.to_s} = '#{v}'\n"
-        end
-        segment += "end\n"
-      else
-        segment += "  t.add_flag({"
-        remove_reserved_keys(flag).each do |k, v|
-          segment += ":#{k} => '#{v}',"
-        end
-        segment += "})\n"
-      end
-    end
-    return segment
-  end
-
   step 'Test flags that will let command continue' do
 
     test_filename = File.basename(__FILE__, '.*')
     command_flags = [
       {:name => '--setenv-nodefault', :override_env => "NODEFAULT_#{test_filename.upcase}", :exists => true},
-      {:name => '--setenv-default', :block_syntax => true, :exists => true, :default => 'Author specified default'},
+      {:name => '--setenv-default',                                                         :exists => true, :default => 'Author specified default', :block_syntax => true},
     ]
+    command_flags = command_flags.each{|e| e[:type] = :option }
 
 
     @task_name    = 'command_flags_with_override'
@@ -65,6 +45,7 @@ end
     command_flags = [
       {:name => '--unset-nodefault', :override_env => 'NOTSET'},
     ]
+    command_flags = command_flags.each{|e| e[:type] = :option }
 
     @task_name    = 'command_flags_that_stop_rake'
     rakefile_contents = <<-EOS
@@ -95,6 +76,7 @@ end
         {:name => '--not-required', :override_env => 'required_override', :required => false},
         {:name => '--not-required-with-default', :override_env => override, :default => 'def_val', :required => false},
     ]
+    command_flags = command_flags.each{|e| e[:type] = :option }
 
     @task_name    = 'command_flags_that_stop_rake'
     rakefile_contents = <<-EOS

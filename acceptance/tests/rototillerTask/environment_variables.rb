@@ -7,27 +7,6 @@ test_name 'C97797: ensure environment variable operation in RototillerTasks' do
   extend RakefileTools
   extend TestUtilities
 
-  def create_rakefile_task_segment(envs)
-    segment = ''
-    envs.each do |env|
-      sut.add_env_var(env[:name], "#{env[:name]}: present value") if env[:exists]
-      if env[:block_syntax]
-        segment += "t.add_env do |env|\n"
-        remove_reserved_keys(env).each do |k, v|
-          segment += "  env.#{k.to_s} = '#{v}'\n"
-        end
-        segment += "end\n"
-      else
-        segment += "  t.add_env({"
-        remove_reserved_keys(env).each do |k, v|
-          segment += ":#{k} => '#{v}',"
-        end
-        segment += "})\n"
-      end
-    end
-    return segment
-  end
-
   step 'For environment variables that will succeed' do
     env_vars = [
       {:name => 'NO_DEFAULT-EXISTS',        :message => 'no default, previously exists',
@@ -43,6 +22,7 @@ test_name 'C97797: ensure environment variable operation in RototillerTasks' do
       {:name => 'NO_DEFAULT-EXISTS-BLOCK',  :message => 'no default, previously exists',
        :exists => true,   :block_syntax => true},
     ]
+    env_vars = env_vars.each{|e| e[:type] = :env }
 
     @task_name    = 'env_var_testing_task'
     rakefile_contents = <<-EOS
@@ -78,6 +58,8 @@ end
       {:name => 'NO_DEFAULT-NO_EXISTS-BLOCK', :message => 'no default, does not previously exist',
        :exists => false},
     ]
+    env_vars_fail = env_vars_fail.each{|e| e[:type] = :env }
+
     rakefile_contents = <<-EOS
 #{rototiller_rakefile_header}
 Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|

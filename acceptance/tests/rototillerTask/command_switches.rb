@@ -44,7 +44,7 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
       {:name => '--nameB',                  :is_boolean => true, :override_env => 'NODEFAULT4',  :env_value => '',      :block_syntax => true},
       {:name => '--nameC',  :default => '', :is_boolean => true, :override_env => 'HASDEFAULT4', :env_value => '',      :block_syntax => true},
   ]
-
+  command_switches = command_switches.each{|e| e[:type] = :switch }
 
   @task_name    = test_filename
   rakefile_contents = <<-EOS
