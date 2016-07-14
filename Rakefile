@@ -28,6 +28,12 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
 
   # with new block syntax
   t.add_flag do |flag|
+    flag.name = '--log-level'
+    flag.default ="verbose"
+    flag.message = 'beaker log-level'
+    flag.override_env = 'BEAKER_LOG_LEVEL'
+  end
+  t.add_flag do |flag|
     flag.name = '--hosts'
     flag.default = 'acceptance/hosts.cfg'
     flag.message = 'The configuration file that Beaker will use'
@@ -37,7 +43,7 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
     flag.name = '--preserve-hosts'
     flag.default = 'onfail'
     flag.message = 'The beaker setting to preserve a provisioned host'
-    flag.override_env = 'BEAKER_PRESERVE-HOSTS'
+    flag.override_env = 'BEAKER_PRESERVE_HOSTS'
   end
   t.add_flag do |flag|
     flag.name = '--keyfile'
@@ -49,13 +55,13 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
     flag.name = '--load-path'
     flag.default = 'acceptance/lib'
     flag.message = 'The load path Beaker will use'
-    flag.override_env = "BEAKER_LOAD-PATH"
+    flag.override_env = "BEAKER_LOAD_PATH"
   end
   t.add_flag do |flag|
     flag.name = '--pre-suite'
     flag.default = 'acceptance/pre-suite'
     flag.message = 'THe path to a directory containing pre-suites'
-    flag.override_env = "BEAKER_PRE-SUITE"
+    flag.override_env = "BEAKER_PRE_SUITE"
   end
   t.add_flag do |flag|
     flag.name = '--tests'
