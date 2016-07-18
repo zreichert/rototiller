@@ -1,4 +1,4 @@
-require 'rototiller/version'
+require_relative '../../lib/rototiller/version'
 
 gem_name = "rototiller-#{Rototiller::Version::STRING}.gem"
 teardown do
