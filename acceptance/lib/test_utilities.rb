@@ -1,7 +1,7 @@
 module TestUtilities
 
   def random_string
-    (0...10).map { ('a'..'z').to_a[rand(26)] }.join.upcase
+    [*('a'..'z'),*('0'..'9')].shuffle[0,6].join
   end
 
   def set_random_env_on(host)
@@ -11,7 +11,6 @@ module TestUtilities
   end
 
   def unique_env_on(host)
-
     env = {}
     env_var = random_string
 
@@ -25,4 +24,25 @@ module TestUtilities
     env_var = random_string until !env[env_var]
     return env_var
   end
+
+  def execute_task_on(host, task_name=nil, rakefile_path=nil)
+    step "Execute task '#{task_name}', ensure success"
+    command = "rake #{task_name}"
+    command = command + " --rakefile #{rakefile_path}" if rakefile_path
+    on(host, command, :accept_all_exit_codes => true) do |result|
+      assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")
+      assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
+      return result
+    end
+  end
+
+  RESERVED_KEYS = [:block_syntax, :env_value, :exists, :type]
+  def remove_reserved_keys(h)
+    hash = h.dup
+    RESERVED_KEYS.each do |key|
+      hash.delete(key)
+    end
+    return hash
+  end
+
 end
