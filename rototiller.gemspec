@@ -16,5 +16,8 @@ Gem::Specification.new do |s|
   s.files         = Dir['[A-Z]*[^~]'] + Dir['lib/**/*.rb'] + Dir['spec/*']
 
   #Run time dependencies
-  s.add_runtime_dependency 'rake', '>= 0.9.0'
+  rake_version = ENV['RAKE_VER'] || '11.0'
+  # RAKE_VER=0.9, 10.0, 11.0
+  #   don't use 11.0.0, which probably installs 11.0.1 which has issues
+  s.add_runtime_dependency 'rake', "~> #{rake_version}"
 end
