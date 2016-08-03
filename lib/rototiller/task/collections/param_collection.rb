@@ -1,5 +1,3 @@
-require 'rototiller/task/params/command_flag'
-require 'rototiller/task/params/env_var'
 require 'forwardable'
 
 module Rototiller
@@ -10,7 +8,7 @@ module Rototiller
       # This may be useful if we use individual ParamCollection objects for EnvVars and Flags
       extend Forwardable
 
-      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :push
+      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :push, :each
 
       # collect a given task's params
       def initialize

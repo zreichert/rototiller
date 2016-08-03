@@ -1,13 +1,13 @@
 require 'rototiller/task/collections/param_collection'
-require 'rototiller/task/params/env_var'
+require 'rototiller/task/params/command'
 
 module Rototiller
   module Task
 
-    class EnvCollection < ParamCollection
+    class CommandCollection < ParamCollection
 
       def push(*args)
-        check_classes(EnvVar, *args)
+        check_classes(Command, *args)
         super
       end
 

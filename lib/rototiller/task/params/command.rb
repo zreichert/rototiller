@@ -2,9 +2,9 @@ require 'rototiller/task/params/env_var'
 
 module Rototiller
   module Task
-    class Command
 
-      include Rototiller::ColorText
+    class Command
+      include ColorText
 
       # @return [String] the command to be used, could be considered a default
       attr_accessor :name
@@ -22,7 +22,14 @@ module Rototiller
       # @param [Hash] attribute_hash hashes of information about the command
       # @option attribute_hash [String] :command The command
       # @option attribute_hash [String] :override_env The environment variable that can override this command
-      def initialize(attribute_hash = {})
+      def initialize(attributes, args, &block)
+        if block_given?
+          attribute_hash = pull_params_from_block(attributes, &block)
+        else
+          attribute_hash = args
+        end
+        # TODO: make this a global options hash?
+        #attribute_hash[:set_env] = true if opts[:set_env]
 
         # check if an override_env is provided
         if attribute_hash[:override_env]
@@ -40,6 +47,24 @@ module Rototiller
           @argument = attribute_hash[:argument]
         end
       end
+
+      #FIXME: move the delete_if stuff to its own private method
+      def to_str
+        [(name if name), @flags.to_s, (argument if argument)
+        ].delete_if{ |i| [nil, '', false].any?{|forbidden| i == forbidden}}.join(' ').to_s
+      end
+      alias :to_s :to_str
+
+      # FIXME: this probably needs messaging
+      #   but also, inherit from a param base class which has these skeletoned out
+      def message
+        ''
+      end
+
+      def stop
+        false
+      end
+
     end
 
   end

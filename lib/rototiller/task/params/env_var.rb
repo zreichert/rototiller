@@ -1,4 +1,5 @@
 require 'rototiller/utilities/color_text'
+require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
@@ -6,6 +7,7 @@ module Rototiller
     class EnvVar
       MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
       include Rototiller::ColorText
+      include Rototiller::Task::BlockHandling
 
       # @return [String] the value of the :name argument
       attr_accessor :var
@@ -34,12 +36,21 @@ module Rototiller
       # @option attribute_hash [String] :default The default value for the environment variable
       # @option attribute_hash [String] :message A message describing the use of this variable
       # @option attribute_hash [Boolean] :required Used internally by CommandFlag, ignored for a standalone EnvVar
-      def initialize(attribute_hash)
+      def initialize(attributes, args, &block)
+        if block_given?
+          attribute_hash = pull_params_from_block(attributes, &block)
+        else
+          attribute_hash = args
+        end
+        # TODO: make this a global options hash?
+        #attribute_hash[:set_env] = true if opts[:set_env]
+
         raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
         @var = attribute_hash[:name]
         @message = attribute_hash[:message]
         @default = attribute_hash[:default]
         @set_env = attribute_hash[:set_env] || false
+        # FIXME: create env_var truthy helper
         attribute_hash[:required].is_a?(String) ? attribute_hash[:required] = (attribute_hash[:required].downcase == 'true') : attribute_hash[:required]
         @required = ( !!attribute_hash[:required] == attribute_hash[:required] ? attribute_hash[:required] : true)
 
