@@ -1,10 +1,10 @@
-require 'rototiller/utilities/env_var'
-require 'rototiller/utilities/param_collection'
-require 'rototiller/utilities/env_collection'
-require 'rototiller/utilities/flag_collection'
-require 'rototiller/utilities/command_flag'
-require 'rototiller/utilities/command'
-require 'rototiller/utilities/block_syntax_object'
+require 'rototiller/task/params/env_var'
+require 'rototiller/task/collections/param_collection'
+require 'rototiller/task/collections/env_collection'
+require 'rototiller/task/collections/flag_collection'
+require 'rototiller/task/params/command_flag'
+require 'rototiller/task/params/command'
+require 'rototiller/task/block_handling'
 require 'rake/tasklib'
 
 module Rototiller
@@ -25,7 +25,7 @@ module Rototiller
         @name          = args.shift
         @fail_on_error = true
         #TODO refactor or remove
-        @command = Rototiller::Command.new
+        @command = Command.new
         @command.name = 'echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.'
         # rake's in-task implied method is true when using --verbose
         @verbose       = verbose == true
@@ -88,7 +88,7 @@ module Rototiller
         else
           attribute_hash = args
         end
-        @command = Rototiller::Command.new(attribute_hash)
+        @command = Command.new(attribute_hash)
       end
 
       private
@@ -164,7 +164,7 @@ module Rototiller
       # @private
       def pull_params_from_block(param_array, &block)
 
-        block_syntax_obj = Rototiller::Block_syntax.new(param_array)
+        block_syntax_obj = Block_syntax.new(param_array)
         yield(block_syntax_obj)
         block_syntax_obj
       end
