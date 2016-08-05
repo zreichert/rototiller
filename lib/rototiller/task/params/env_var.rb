@@ -111,7 +111,7 @@ module Rototiller
       def reset
         # TODO should an env automatically set the ENV? possibly a global config option
         @value = ENV[@var] || @default
-        ENV[@var] = @value if @set_env
+        ENV[@var] = @value if @value # TODO: automatically set here.  ignores set_env
         set_message_level
       end
 

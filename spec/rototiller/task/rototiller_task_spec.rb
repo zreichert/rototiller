@@ -12,9 +12,6 @@ module Rototiller::Task
           expect(task.name).to be nil
           expect(task.fail_on_error).to eq true
         end
-        it "renders cli for '#{init_method}' method" do
-          expect(task.command.name).to eq('echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.')
-        end
 
         def described_define
           task.__send__(:define, nil)
@@ -71,12 +68,12 @@ module Rototiller::Task
 
         it 'prints it if the command run failed' do
           task.add_command({:name => 'exit 1'})
-          expect { described_run_task }.to output(/Bad news/).to_stdout
+          expect { described_run_task }.to output(/Bad news/).to_stderr
         end
 
         it 'does not print it if the command run succeeded' do
           task.add_command({:name =>  'echo'})
-          expect { described_run_task }.not_to output(/Bad/).to_stdout
+          expect { described_run_task }.not_to output(/Bad/).to_stderr
         end
       end
 
@@ -119,61 +116,6 @@ module Rototiller::Task
         end
       end
 
-      # TODO: reduce repetition
-      #   actually most of these are covered in command_flag_spec
-      #   this should just test that it accepts the given args?
-      context 'with flags' do
-        let(:command) {'nonesuch'}
-        let(:flag1) {'--flagoner'}
-        let(:value) {'I am a value'}
-
-        it 'should work with correct arguments' do
-          args = {:name => flag1, :default => value, :message => 'blah',
-                  :is_boolean => true, :override_env => 'WAT'}
-          expect{ task.add_flag(args) }.not_to raise_error
-        end
-
-
-        it "renders cli for '#{init_method}' with one flag" do
-          arg = {:name => flag1, :message => 'description', :default => value}
-          task.add_command({:name => command})
-          task.add_flag(arg)
-          expect(task).to receive(:system).with("#{command} #{flag1} #{value}").and_return(true)
-          silence_output do
-            described_run_task
-          end
-        end
-        it "renders cli for '#{init_method}' with multiple flags" do
-          task.add_command({:name => command})
-          task.add_flag({:name => flag1, :message => 'other description', :default => value})
-          task.add_flag({:name => '-t', :message => '-t description', :default => 'tvalue'})
-          expect(task).to receive(:system).with("#{command} #{flag1} #{value} -t tvalue").and_return(true)
-          silence_output do
-            described_run_task
-          end
-        end
-        it "prints messages for '#{init_method}' with single nonvalue CLI flag" do
-          pending 'functionality temporarily disabled'
-          task.add_flag({:name => '-t', :message => '-t description'})
-          expect{ described_run_task }
-            .to output(/CLI flag -t will be used, no value was provided/)
-            .to_stdout
-        end
-        it "prints messages for '#{init_method}' with single value CLI flag" do
-          task.add_flag({:name => '-t', :message =>  '-t description', :default =>  'tvalue2'})
-          expect{ described_run_task }
-            .to output(/-t description.*CLI flag '-t' will be used with value 'tvalue2'/m)
-            .to_stdout
-        end
-        it "raises argument error for too many flag args" do
-          expect{ task.add_flag('-t', '-t description', 'tvalue2', 'someother') }.to raise_error(ArgumentError)
-        end
-        it "raises argument error when flags used with no command" do
-          task.add_command({:name => nil})
-          task.add_flag({:name => '--blah', :default => ''})
-          expect{ described_run_task }.to raise_error(ArgumentError)
-        end
-      end
       context 'with env vars' do
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
@@ -225,63 +167,6 @@ module Rototiller::Task
           expect{ described_run_task }
             .to output(/ERROR: #{env_message_header} is required: #{env_desc}.*VAR2.*VAR3.*#{env_name}/m)
             .to_stdout
-        end
-      end
-      context 'Commands with arguments and flags' do
-
-        let(:command) {random_string}
-        let(:echo_command) {"echo #{command}"}
-        let(:argument) {random_string}
-        let(:command_env) {unique_env}
-        let(:argument_env) {unique_env}
-        let(:flag_override_env) {unique_env}
-        let(:add_flag_args) { {:name => '--flag', :default => 'flag_value'} }
-        let(:args) { {:name => echo_command, :argument => argument, :override_env => command_env, :argument_override_env => argument_env} }
-        context 'variables not set' do
-
-          it 'should use the values in :name and :argument' do
-            task.add_command(args)
-            task.add_flag(add_flag_args)
-            task.send(:set_verbose)
-
-            expect { described_run_task }
-            .to output(/#{command} #{add_flag_args[:name]} #{add_flag_args[:default]} #{argument}/)
-            .to_stdout
-          end
-        end
-        context 'variables set' do
-
-          it 'should use the values inside the variables' do
-            command_env_value = random_string
-            argument_env_value = random_string
-            ENV[command_env] = "echo #{command_env_value}"
-            ENV[argument_env] = argument_env_value
-
-
-            task.add_command(args)
-            task.add_flag(add_flag_args)
-            task.send(:set_verbose)
-
-            expect { described_run_task }
-            .to output(/#{command_env_value} #{add_flag_args[:name]} #{add_flag_args[:default]} #{argument_env_value}/)
-            .to_stdout
-          end
-        end
-        context 'flag with no value, required=false' do
-          it 'should not include the non required flag with no value' do
-            flag_override_env_value = ''
-            ENV[flag_override_env] = flag_override_env_value
-
-            task.add_command(args)
-            add_flag_args[:required] = false
-            add_flag_args[:override_env] = flag_override_env
-            task.add_flag(add_flag_args)
-            task.send(:set_verbose)
-
-            expect { described_run_task }
-            .to output(/#{command} #{argument}/)
-            .to_stdout
-          end
         end
       end
     end
