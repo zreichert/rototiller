@@ -7,7 +7,7 @@ module Rototiller
     class EnvVar
       MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
       include Rototiller::ColorText
-      include Rototiller::Task::BlockHandling
+      include BlockHandling
 
       # @return [String] the value of the :name argument
       attr_accessor :var
@@ -31,14 +31,18 @@ module Rototiller
       attr_reader :value
 
       # Creates a new instance of EnvVar, holds information about the ENV in the environment
-      # @param [Hash] attribute_hash hash of information about the environment variable
-      # @option attribute_hash [String] :name The environment variable
-      # @option attribute_hash [String] :default The default value for the environment variable
-      # @option attribute_hash [String] :message A message describing the use of this variable
-      # @option attribute_hash [Boolean] :required Used internally by CommandFlag, ignored for a standalone EnvVar
-      def initialize(attributes, args, &block)
+      # @param [Hash, Array<Hash>] args hash of information about the environment variable
+      # @option args [String] :name The environment variable
+      # @option args [String] :default The default value for the environment variable
+      # @option args [String] :message A message describing the use of this variable
+      # @option args [Boolean] :required Used internally by CommandFlag, ignored for a standalone EnvVar
+      # for block { |b| ... }
+      # @yield EnvVar object with attributes matching method calls supported by EnvVar
+      # @return EnvVar object
+      def initialize(args={}, &block)
         if block_given?
-          attribute_hash = pull_params_from_block(attributes, &block)
+          required_attributes = [:name, :default, :message, :required, :set_env] # maybe should be a CONST
+          attribute_hash = pull_params_from_block(required_attributes, &block)
         else
           attribute_hash = args
         end
@@ -57,7 +61,7 @@ module Rototiller
         reset
       end
 
-      # The formatted message to be displayed to the user
+      # The formatted messages about this EnvVar's status to be displayed to the user
       # @return [String] the EnvVar's message, formatted for color and meaningful to the state of the EnvVAr
       def message
         if message_level == :error
@@ -105,7 +109,7 @@ module Rototiller
 
       private
       def reset
-        # TODO should an env automatically set the ENV?
+        # TODO should an env automatically set the ENV? possibly a global config option
         @value = ENV[@var] || @default
         ENV[@var] = @value if @set_env
         set_message_level

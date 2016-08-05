@@ -24,7 +24,6 @@ module Rototiller
       # @option filters [String, false, true] :var the value of the return from .var on EnvVar
       # @return [String] messages from the contents of this ParamCollection, formatted with new lines and color
       # @example Get the messages where :stop is true & :message_level is :warning
-      'format_message({:stop => true, :message_level => :warning})'
       def format_messages(filters=nil)
 
         formatted_message = String.new

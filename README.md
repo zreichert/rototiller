@@ -52,7 +52,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with just name
     t.add_env('env_name') #required, default messaging
-    t.add_env({:name => 'env_name'})
     t.add_env :env_name
     t.add_env 'env_name' # implicitly allowed by ruby
     t.add_env do |e|
@@ -61,7 +60,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, message
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :message})
     t.add_env :env_name do |e|
     t.add_env 'env_name' do |e|  # should we do this too?
       e.set_message
@@ -73,7 +71,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, value
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :default/:value =>}) # optional; default messaging
     t.add_env :env_name do |e|
     t.add_env 'env_name' do |e|  # should we do this too?
       e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
@@ -85,7 +82,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, value, message
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :default/:value =>, :message})
     t.add_env :env_name do |e|
       e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
       e.message
@@ -100,7 +96,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
     ## all task's add_command invocations with only name
     # default messaging, no env override?
     t.add_command('echo --blah my name is ray')
-    t.add_command({:name => 'echo'})
     t.add_command :echo
     t.add_command 'echo'
     t.add_command do |c|
@@ -109,7 +104,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_command invocations with name (string), message
     #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
-    t.add_command({:name => 'echo', :message => 'blah'})
     t.add_command :echo
     t.add_command 'echo' do |c|
       c.name = 'echo' # # nomethod error?
@@ -122,7 +116,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_command invocations with name (block) (could be same for message?)
     #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
-    t.add_command({:name => {some block?}, :message => 'blah'})
     #t.add_command :echo
     #t.add_command 'echo' do |c|
     #  c.message = 'blah'
