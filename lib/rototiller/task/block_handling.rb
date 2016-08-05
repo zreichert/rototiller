@@ -17,6 +17,12 @@ module Rototiller
         end
       end
 
+      # creates a hash of attributes from a block and array of parameter names
+      #   that match method calls in the block
+      # @param [Array<Symbol>] param_array the parameters to pull from the block
+      # for block { |b| ... }
+      # @yield object with attributes matching param_array
+      # @return [Hash] hash of param_array keys and their values from the block
       def pull_params_from_block(param_array, &block)
         block_syntax_obj = Rototiller::BlockSyntax.new(param_array)
         yield(block_syntax_obj)
