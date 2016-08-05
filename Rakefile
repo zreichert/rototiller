@@ -74,6 +74,43 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
   t.add_command({:name => 'beaker --debug', :override_env => 'BEAKER_EXECUTABLE'})
 end
 
+task :yard => [:'docs:gen']
+
+namespace :docs do
+  DOCS_DIR = 'yard_docs'
+  desc 'Clear the generated documentation cache'
+  task :clear do
+    original_dir = Dir.pwd
+    Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
+    sh "rm -rf #{DOCS_DIR}"
+    Dir.chdir( original_dir )
+  end
+
+  desc 'Generate static documentation'
+  task :gen => 'docs:clear' do
+    original_dir = Dir.pwd
+    Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
+    output = `yard doc -o #{DOCS_DIR}`
+    puts output
+    if output =~ /\[warn\]|\[error\]/
+      begin # prevent pointless stack on purposeful fail
+        fail "Errors/Warnings during yard documentation generation"
+      rescue Exception => e
+        puts 'Yardoc generation failed: ' + e.message
+        exit 1
+      end
+    end
+    Dir.chdir( original_dir )
+  end
+
+  desc 'Generate static class/module/method graph'
+  task :class_graph do
+    Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
+    `yard graph --full | dot -Tpng -o #{DOCS_DIR}/rototiller_class_graph.png`
+    Dir.chdir( original_dir )
+  end
+end
+
 rototiller_task :check_test do |t|
   t.add_env({:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests'})
   t.add_env({:name => 'RAKE_VER',     :default => '11.0',  :message => 'The rake version to use when running unit tests'})
