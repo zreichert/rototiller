@@ -5,12 +5,9 @@ module Rototiller
   module Task
 
     class EnvCollection < ParamCollection
-
-      def push(*args)
-        check_classes(EnvVar, *args)
-        super
+      def allowed_class
+        EnvVar
       end
-
     end
 
   end

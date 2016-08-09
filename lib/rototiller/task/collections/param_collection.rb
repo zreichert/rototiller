@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'rototiller/task/params/env_var'
 
 module Rototiller
   module Task
@@ -8,11 +9,16 @@ module Rototiller
       # This may be useful if we use individual ParamCollection objects for EnvVars and Flags
       extend Forwardable
 
-      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :push, :each
+      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map
 
       # collect a given task's params
       def initialize
         @collection = []
+      end
+
+      def push(*args)
+        check_classes(allowed_class, *args)
+        @collection.push(*args)
       end
 
       # format the messages inside this ParamCollection
@@ -32,6 +38,7 @@ module Rototiller
         formatted_message
       end
 
+      #@private
       def filter_contents(filters={})
 
         filtered = []
@@ -52,6 +59,12 @@ module Rototiller
         filtered
       end
 
+      #@private
+      def allowed_class
+        EnvVar
+      end
+
+      #@private
       def check_classes(allowed_klass, *args)
 
         args.each do |arg|
@@ -69,7 +82,7 @@ module Rototiller
         @collection.any?{ |param| param.stop }
       end
 
-      private :filter_contents, :check_classes
+      private :filter_contents, :check_classes, :allowed_class
     end
 
   end

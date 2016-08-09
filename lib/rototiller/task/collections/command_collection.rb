@@ -5,12 +5,9 @@ module Rototiller
   module Task
 
     class CommandCollection < ParamCollection
-
-      def push(*args)
-        check_classes(Command, *args)
-        super
+      def allowed_class
+        Command
       end
-
     end
 
   end
