@@ -12,9 +12,6 @@ module Rototiller
       # @return [String] the value of the :name argument
       attr_accessor :var
 
-      # @return [String] the value of the :message argument
-      attr_accessor :message
-
       # @return [String] the value of the :default argument
       attr_accessor :default
 
@@ -22,6 +19,7 @@ module Rototiller
       attr_reader :required
 
       # @return [Symbol] the debug level of the message, ':warning', ':error', ':info'
+      # FIXME: does (api) user need to read this directly?
       attr_reader :message_level
 
       # @return [true, nil] if the state of the EnvVar requires the task to stop
@@ -46,12 +44,10 @@ module Rototiller
         else
           attribute_hash = args
         end
-        # TODO: make this a global options hash?
-        #attribute_hash[:set_env] = true if opts[:set_env]
 
         raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
         @var = attribute_hash[:name]
-        @message = attribute_hash[:message]
+        @user_message = attribute_hash[:message]
         @default = attribute_hash[:default]
         @set_env = attribute_hash[:set_env] || false
         # FIXME: create env_var truthy helper
@@ -73,20 +69,20 @@ module Rototiller
         end
         message_prepend = "#{level_str} The environment variable: '#{@var}'"
         if get_message_type == MESSAGE_TYPES[:default_noexist]
-          return yellow_text("#{message_prepend} is not set. Proceeding with default value: '#{@default}': #{@message}")
+          return yellow_text("#{message_prepend} is not set. Proceeding with default value: '#{@default}': #{@user_message}")
         end
         if get_message_type == MESSAGE_TYPES[:not_required]
-          return yellow_text("#{message_prepend} is not set, but is not required. Proceeding with no flag: #{@message}")
+          return yellow_text("#{message_prepend} is not set, but is not required. Proceeding with no flag: #{@user_message}")
         end
         if get_message_type == MESSAGE_TYPES[:exist]
-          return green_text("#{message_prepend} was found with value: '#{ENV[@var]}': #{@message}")
+          return green_text("#{message_prepend} was found with value: '#{ENV[@var]}': #{@user_message}")
         end
         if get_message_type == MESSAGE_TYPES[:nodefault_noexist]
-          return red_text("#{message_prepend} is required: #{@message}")
+          return red_text("#{message_prepend} is required: #{@user_message}")
         end
       end
 
-      # If any of these variables are assigned a new value after this object's creation, reset @value and @message_level.
+      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def var=(var)
         @var = var
         reset
@@ -98,7 +94,7 @@ module Rototiller
       end
 
       def message=(message)
-        @message = message
+        @user_message = message
         reset
       end
 
@@ -109,9 +105,8 @@ module Rototiller
 
       private
       def reset
-        # TODO should an env automatically set the ENV? possibly a global config option
         @value = ENV[@var] || @default
-        ENV[@var] = @value if @value # TODO: automatically set here.  ignores set_env
+        ENV[@var] = @value if @set_env
         set_message_level
       end
 

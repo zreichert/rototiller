@@ -24,8 +24,8 @@ end
 
 rototiller_task :acceptance => [:generate_host_config] do |t|
   # with a hash
-  t.add_env({:name => 'TEST_TARGET',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator'})
-  t.add_env({:name => 'RAKE_VER',   :default => '11.0',       :message => 'The rake version to use when running acceptance tests'})
+  t.add_env({:name => 'TEST_TARGET',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator', :set_env => true})
+  t.add_env({:name => 'RAKE_VER',   :default => '11.0',       :message => 'The rake version to use when running acceptance tests', :set_env => true})
 
   # with new block syntax
   t.add_flag do |flag|
@@ -112,6 +112,6 @@ namespace :docs do
 end
 
 rototiller_task :check_test do |t|
-  t.add_env({:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests'})
-  t.add_env({:name => 'RAKE_VER',     :default => '11.0',  :message => 'The rake version to use when running unit tests'})
+  t.add_env({:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests', :set_env => true})
+  t.add_env({:name => 'RAKE_VER',     :default => '11.0',  :message => 'The rake version to use when running unit tests', :set_env => true})
 end
