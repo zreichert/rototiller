@@ -10,16 +10,16 @@ module Rototiller
       attr_accessor :name
 
       # @return [Struct] the command results, if run
-      attr_accessor :result
+      attr_reader :result
 
       # @return [EnvVar] the ENV that is equal to this command
-      attr_reader :override_env
+      attr_accessor :override_env
 
       # @return [String, nil] the value that should be used as an argument to the given command
-      attr_reader :argument
+      attr_accessor :argument
 
       # @return [EnvVar] the ENV that is equal to the argument to be used with this command
-      attr_reader :argument_override_env
+      attr_accessor :argument_override_env
 
       # Creates a new instance of Command, holds information about desired state of a command
       # @param [Hash,Array<Hash>] args hashes of information about the command
@@ -69,8 +69,10 @@ module Rototiller
         # make this look a bit like beaker's result class
         #   we may have to convert this to a class if it gets complex
         @result = Result.new
-        # splat the result of popen3 to a new Result struct
-        @result.stdout, @result.stderr, status = Open3.capture3(self)
+        # add ';' to command string as it is a metacharacter that forces open3
+        #   to send the command to the shell. This returns the correct
+        #   exit_code and stderr, etc when the command is not found
+        @result.stdout, @result.stderr, status = Open3.capture3(self.to_str + ";")
         @result.exit_code = status.exitstatus
         if block_given? # if block, send result to the block
           yield @result
