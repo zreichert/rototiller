@@ -1,4 +1,4 @@
 sut = find_only_one('agent')
-on(sut, 'gem install rake')
 
-#TODO in the future use bundler to determine the version of rake
+rake_version = `rake --version`.split[2]
+on(sut, "gem install rake -v #{rake_version}")
