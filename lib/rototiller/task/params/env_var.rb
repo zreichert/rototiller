@@ -1,10 +1,11 @@
+require 'rototiller/task/params'
 require 'rototiller/utilities/color_text'
 require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
 
-    class EnvVar
+    class EnvVar < RototillerParam
       MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
       include Rototiller::ColorText
       include BlockHandling

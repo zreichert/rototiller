@@ -5,6 +5,9 @@ module Rototiller
 
     describe ParamCollection do
 
+      before do
+        allow_any_instance_of(ParamCollection).to receive(:allowed_class).and_return(EnvVar)
+      end
       let(:param_collection)              { ParamCollection.new }
       let(:set_env_1_with_default)        { EnvVar.new({:name => set_random_env, :message => 'description', :default => 'devault value'}) }
       let(:set_env_2_with_default)        { EnvVar.new({:name => set_random_env, :message => 'description', :default => 'devault value'}) }
@@ -15,11 +18,14 @@ module Rototiller
       let(:unset_env_1_no_default)        { EnvVar.new({:name => unique_env, :message => 'description'}) }
       let(:unset_env_2_no_default)        { EnvVar.new({:name => unique_env, :message => 'description'}) }
 
-      context '.push' do
-
+      context '#push' do
         it 'adds a single ENV' do
           expect{ param_collection.push(set_env_1_no_default) }.not_to raise_error
           expect(param_collection).to include(set_env_1_no_default)
+        end
+
+        it 'can not add an incorrect param' do
+          expect{ param_collection.push(Command.new) }.to raise_error(ArgumentError)
         end
 
         it 'adds multiple ENVs' do
@@ -30,8 +36,7 @@ module Rototiller
         end
       end
 
-      context '.format_messages' do
-
+      context '#format_messages' do
         let(:vars) do
           [
             set_env_1_with_default, set_env_2_with_default, set_env_1_no_default,

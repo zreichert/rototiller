@@ -5,7 +5,7 @@ module Rototiller
 
     describe EnvCollection do
       context '#allowed_class' do
-        it 'allows only EnvVar' do
+        it 'allows only EnvVars' do
           expect( described_class.new.allowed_class ).to eql(EnvVar)
         end
       end

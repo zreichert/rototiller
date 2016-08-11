@@ -1,3 +1,5 @@
+require 'open3'
+require 'rototiller/task/params'
 require 'rototiller/task/params/env_var'
 
 module Rototiller
