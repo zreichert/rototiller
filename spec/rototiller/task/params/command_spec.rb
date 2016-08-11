@@ -37,11 +37,11 @@ module Rototiller
           expect( command.result.exit_code ).to eq(0)
         end
         it 'has results after failed run' do
-          command.name = 'doesnotexit'
+          command.name = 'doesnotexist'
           command.run
           expect( command.result.stdout ).to be_empty
-          expect( command.result.stderr.strip ).to eq('sh: doesnotexit: command not found')
-          expect( command.result.exit_code ).to eq(127)
+          expect( command.result.stderr.strip ).to match(/sh\: .*doesnotexist\: (command )?not found/)
+          expect([2,127]).to include(command.result.exit_code)
         end
         context 'with a block' do
           it 'runs the block' do
