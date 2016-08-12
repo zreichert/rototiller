@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 # place all development, system_test, etc dependencies here
 
 # in the Rakefile, so we require it in all groups
-gem 'rspec'                ,'~> 3.1.0'
+gem 'rspec'                ,'~> 3.4.0'
 
 group :system_tests do
   #gem 'beaker', :path => "../../beaker/"
