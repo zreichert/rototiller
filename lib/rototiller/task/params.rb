@@ -3,6 +3,14 @@ module Rototiller
 
     class RototillerParam
 
+      def message
+        ''
+      end
+
+      def stop
+        false
+      end
+
     end
 
   end

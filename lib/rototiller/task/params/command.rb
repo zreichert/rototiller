@@ -1,12 +1,14 @@
 require 'open3'
 require 'rototiller/task/params'
 require 'rototiller/task/params/env_var'
+require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
 
-    class Command
+    class Command < RototillerParam
       include Rototiller::ColorText
+      include BlockHandling
 
       # @return [String] the command to be used, could be considered a default
       attr_accessor :name
@@ -59,33 +61,43 @@ module Rototiller
       # convert a Command object to a string (runable command string)
       # @return [String]
       def to_str
-        [(name if name), @flags.to_s, (argument if argument)
-        ].delete_if{ |i| [nil, '', false].any?{|forbidden| i == forbidden}}.join(' ').to_s
+        delete_nil_empty_false([
+          (name if name),
+          @flags.to_s,
+          (argument if argument)
+        ]).join(' ').to_s
       end
       alias :to_s :to_str
 
-      Result = Struct.new(:stdout, :stderr, :exit_code)
+      Result = Struct.new(:output, :exit_code, :pid)
       # run Command locally, capture relevent result data
       # @return [Struct<Result>] a Result Struct with stdout, stderr, exit_code members
       def run
         # make this look a bit like beaker's result class
         #   we may have to convert this to a class if it gets complex
         @result = Result.new
+        @result.output = ''
         # add ';' to command string as it is a metacharacter that forces open3
         #   to send the command to the shell. This returns the correct
         #   exit_code and stderr, etc when the command is not found
-        @result.stdout, @result.stderr, status = Open3.capture3(self.to_str + ";")
-        @result.exit_code = status.exitstatus
+        Open3.popen2e(self.to_str + ";"){|stdin, stdout_err, wait_thr|
+          stdout_err.each { |line| puts line
+                            @result.output << line }
+          @result.pid    = wait_thr.pid # pid of the started process.
+          @result.exit_code = wait_thr.value.exitstatus # Process::Status object returned.
+        }
+
         if block_given? # if block, send result to the block
           yield @result
         end
         @result
       end
 
-      def stop
-        false
+      private
+      # @private
+      def delete_nil_empty_false(arg)
+        arg.delete_if{ |i| ([nil, '', false].include?(i)) }
       end
-
     end
 
   end

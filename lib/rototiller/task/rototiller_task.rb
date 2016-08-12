@@ -6,18 +6,17 @@ module Rototiller
   module Task
 
     class RototillerTask < ::Rake::TaskLib
-      #TODO rename instance vars and methods to not match sub blocks
-      #  huh?
       attr_reader :name
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
+      # FIXME: make fail_on_error per-command
       attr_accessor :fail_on_error
       # A message to print to stderr when there are failures.
+      # FIXME: make this per-command
       attr_accessor :failure_message
 
       def initialize(*args, &task_block)
         @name          = args.shift
-        # TODO: make fail_on_error per command?
         @fail_on_error = true
         @commands      = CommandCollection.new
 
@@ -45,19 +44,17 @@ module Rototiller
       # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
       def add_env(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message, :required]
         # this is kinda annoying we have to do this for all params? (not DRY)
         #   have to do it this way so EnvVar doesn't become a collection
         #   but if this gets moved to a mixin, it might be more tolerable
         if block_given?
-          empty_arg = []
-          @env_vars.push(EnvVar.new(attributes, empty_arg, &block))
+          @env_vars.push(EnvVar.new(&block))
         else
           #TODO: test this with array and non-array single hash
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @env_vars.push(EnvVar.new(attributes, arg))
+            @env_vars.push(EnvVar.new(arg))
           end
         end
       end
@@ -71,15 +68,13 @@ module Rototiller
       # @yield [a] Optional block syntax allows you to specify information about command, available methods match hash keys
       def add_command(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :override_env, :argument, :argument_override_env]
         if block_given?
-          empty_arg = []
-          @commands.push(Command.new(attributes, empty_arg, &block))
+          @commands.push(Command.new(&block))
         else
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @commands.push(Command.new(attributes, arg))
+            @commands.push(Command.new(arg))
           end
         end
       end
@@ -102,13 +97,16 @@ module Rototiller
         @commands.each do |command|
           puts command if @verbose
 
-          return if system(command) # return if system() successful
-          puts failure_message if failure_message
+          command.run
+          command_failed = command.result.exit_code > 0
 
-          return unless fail_on_error
-          $stderr.puts "#{command} failed" if @verbose
-          exit $?.exitstatus
+          $stderr.puts failure_message if failure_message && command_failed
+          $stderr.puts "'#{command}' failed" if @verbose && command_failed
+
+          exit command.result.exit_code if fail_on_error && command_failed
         end
+        # might be useful in output of t.add_command()?  but if not, Command has #result
+        return @commands.map{ |command| command.result }
       end
 
       # @private

@@ -30,22 +30,23 @@ module Rototiller
         it 'has nil results prior to run' do
           expect( command.result ).to be_nil
         end
+        it 'has streams results to stdout during run' do
+          #FIXME: i can't figure out how to ensure that it prints before the thread returns
+        end
         it 'has results after successful run' do
           command.run
-          expect( command.result.stdout.strip ).to eq(@arg_name)
-          expect( command.result.stderr ).to be_empty
+          expect( command.result.output.strip ).to eq(@arg_name)
           expect( command.result.exit_code ).to eq(0)
         end
         it 'has results after failed run' do
           command.name = 'doesnotexist'
           command.run
-          expect( command.result.stdout ).to be_empty
-          expect( command.result.stderr.strip ).to match(/sh\: .*doesnotexist\: (command )?not found/)
+          expect( command.result.output.strip ).to match(/sh\: .*doesnotexist\: (command )?not found/)
           expect([2,127]).to include(command.result.exit_code)
         end
         context 'with a block' do
           it 'runs the block' do
-            expect{ command.run { |result| puts "my exit_code: '#{result.exit_code}'" } }.to output("my exit_code: '0'\n").to_stdout
+            expect{ command.run { |result| puts "my exit_code: '#{result.exit_code}'" } }.to output("#{@arg_name}\nmy exit_code: '0'\n").to_stdout
           end
         end
       end

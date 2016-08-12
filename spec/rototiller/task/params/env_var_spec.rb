@@ -28,7 +28,7 @@ module Rototiller
 
                 #args.insert(1, var_default) if method_signature == 'with_default'
                 args[:default] = @var_default if method_signature == 'with_default'
-                @env_var = EnvVar.new(args)
+                @env_var = described_class.new(args)
 
                 @expected_var_default = @var_default
                 @expected_var_default = nil if method_signature == 'without_default'
@@ -88,7 +88,7 @@ module Rototiller
 
       it 'errors when no name is provided' do
         no_name = {:default => 'default value', :message => 'This is the message'}
-        expect{EnvVar.new(no_name)}.to raise_error(ArgumentError, 'A name must be supplied to an EnvVar')
+        expect{described_class.new(no_name)}.to raise_error(ArgumentError, 'A name must be supplied to add_env')
       end
     end
 
