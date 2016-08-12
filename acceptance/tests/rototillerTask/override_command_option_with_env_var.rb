@@ -3,6 +3,7 @@ require 'rakefile_tools'
 require 'test_utilities'
 
 test_name 'C97798: existing workflows shall be supported for using ENV vars to override command options' do
+  skip_test 'options disabled for now'
   extend Beaker::Hosts
   extend RakefileTools
   extend TestUtilities
