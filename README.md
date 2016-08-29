@@ -1,9 +1,9 @@
 # Rototiller
 
-A [Rake](https://github.com/ruby/rake) helper for command-oriented tasks.
+A [Rake](https://github.com/ruby/rake) helper library for command-oriented tasks.
 
-:warning: This version of Rototiller should be considered of _beta_ quality.
-It is already known that the API will change quite a bit for the next release.
+:warning: This version of Rototiller (master branch) is a work in progress!
+It is already known that the API will change quite a bit for the next release. These API changes are underway.
 Please see the notes at the top of the [Write](#write) section.
 
 * simplifies the building of command strings in :rototiller_task for task authors
@@ -32,6 +32,131 @@ The known changes include (not comprehensive):
 * the above will allow for multiple commands in a task with independent option, switch, and environment variable tracking
 
 Rototiller has 4 main _types_ of arguments that can be passed to a command in a task. `RototillerTasks` can accept multiple commands.  Each of these argument types has a similar API that looks similar to `add_command()`.
+
+<a name="use"></a>
+## Use
+It's just like normal Rake. We just added a bunch of task methods and messaging!
+(with the below example Rakefile):
+
+    $) rake -T
+    rake parent_task  # some parent task
+    rake test         # test all the things
+
+    $) rake -D
+    rake parent_task
+        task dependencies work. this one also uses an environment variable
+    rake test
+        override command-name with environment variable
+
+
+### Examples
+    require 'rototiller'
+
+    desc "task dependencies work. this one also uses an environment variable"
+    rototiller_task :parent_task do |task|
+      # most method initializers take either a hash, or block syntax (see next task)
+      task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
+      task.add_command({:name => "echo 'i am testing everything with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
+    end
+produces:
+
+    $) rake parent_task RANDOM_VAR=redrum
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
+    i am testing everything with $RANDOM_VAR = redrum
+&nbsp;
+
+    desc "override command-name with environment variable"
+    rototiller_task :test => :parent_task do |task|
+      # block syntax here. We give up some lines for more readability
+      task.add_command do |cmd|
+        cmd.name         = 'test'
+        cmd.override_env = 'ECHO_EXECUTABLE'
+      end
+      task.add_command({:name => "echo $NONESUCH"})
+    end
+produces:
+
+    # added environment variable defaults are set, implicitly, if not found
+    #   this way, their value can be used in the task
+    $) rake test
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
+    i am testing everything with $RANDOM_VAR = default value
+    The CLI flag -f will be used with value Rakefile.
+
+    $) rake test ECHO_EXECUTABLE='ls' --verbose
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
+    echo 'i am testing everything with $RANDOM_VAR = default value'
+    i am testing everything with $RANDOM_VAR = default value
+    The CLI flag -f will be used with value Rakefile.
+
+    ls -f Rakefile
+    Rakefile
+&nbsp;
+
+    desc "override command argument values with environment variables"
+    rototiller_task :test_arg_env do |task|
+      task.add_command do |cmd|
+        cmd.name                  = 'ls'
+        cmd.argument              = 'Rakefile' # FIXME: this will change to `#add_arg`
+        cmd.argument_override_env = 'FILENAME'
+      end
+    end
+produces:
+
+    $) rake test_arg_env
+    The CLI flag -f will be used with value Rakefile.
+    $) echo $?
+    0
+
+    $) rake test_arg_env --verbose
+    The CLI flag -f will be used with value Rakefile.
+
+    test -f Rakefile
+
+    $) rake test_arg_env --verbose FLAG_VALUE='README.md'
+    The CLI flag -f will be used with value README.md.
+
+    test -f README.md
+
+    $) rake test_arg_env --verbose FLAG_VALUE='nonesuch'
+    The CLI flag -f will be used with value README.md.
+
+    test -f README.md
+    test -f nonesuch failed
+
+    $) rake test_arg_env
+    Rakefile
+
+    $) rake test_arg_env FILENAME=README.md
+    README.md
+
+## Issues
+
+* none. it's perfect
+* [Jira: Rototiller](https://tickets.puppetlabs.com/issues/?jql=project%20%3D%20QA)
+
+## More Documentation
+
+Rototiller is documented using yard
+to view yard docs, including internal Classes and Modules:
+
+First build a local copy of the gem
+
+    $) bundle exec rake build
+
+Next start the yard server
+
+    $) bundle exec yard server
+
+Finally navigate to http://0.0.0.0:8808/ to view the documentation
+
+## Maintainers
+* [Zach Reichert](zach.reichert@puppetlabs.com), github:[zreichert](https://github.com/zreichert), jira:zach.reichert
+* [Eric Thompson](erict@puppetlabs.com), github:[er0ck](https://github.com/er0ck), jira:erict
+* [QA](qa-team@puppetlabs.com)
+
+
+## abandon hope, all ye who enter here
 ### All permutations of v2 API (remove and refactor into useful doc sections below upon testing, merge-up to stable)
 
 * all things that can take multiples should use add\_ as precursor to method name
@@ -52,7 +177,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with just name
     t.add_env('env_name') #required, default messaging
-    t.add_env({:name => 'env_name'})
     t.add_env :env_name
     t.add_env 'env_name' # implicitly allowed by ruby
     t.add_env do |e|
@@ -61,7 +185,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, message
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :message})
     t.add_env :env_name do |e|
     t.add_env 'env_name' do |e|  # should we do this too?
       e.set_message
@@ -73,7 +196,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, value
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :default/:value =>}) # optional; default messaging
     t.add_env :env_name do |e|
     t.add_env 'env_name' do |e|  # should we do this too?
       e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
@@ -85,7 +207,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_env invocations with name, value, message
     #t.add_env('env_name')  # impossible
-    t.add_env({:name => 'env_name', :default/:value =>, :message})
     t.add_env :env_name do |e|
       e.default/value  # does value imply the env will be set by rototiller?  does default NOT?
       e.message
@@ -100,7 +221,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
     ## all task's add_command invocations with only name
     # default messaging, no env override?
     t.add_command('echo --blah my name is ray')
-    t.add_command({:name => 'echo'})
     t.add_command :echo
     t.add_command 'echo'
     t.add_command do |c|
@@ -109,7 +229,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_command invocations with name (string), message
     #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
-    t.add_command({:name => 'echo', :message => 'blah'})
     t.add_command :echo
     t.add_command 'echo' do |c|
       c.name = 'echo' # # nomethod error?
@@ -122,7 +241,6 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
     ## all task's add_command invocations with name (block) (could be same for message?)
     #t.add_command('echo --blah my name is ray', 'message') # ArgumentError
-    t.add_command({:name => {some block?}, :message => 'blah'})
     #t.add_command :echo
     #t.add_command 'echo' do |c|
     #  c.message = 'blah'
@@ -161,153 +279,3 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
     end
 
     #should we be able to add an env for any given message?  i don't see a use case, we should probably just save users from themselves here.
-
-
-
-### Examples (see the [Use](#use) section for outputs):
-    require 'rototiller'
-
-    desc "task dependencies work. this one also uses an environment variable"
-    rototiller_task :parent_task do |task|
-      # most method initializers take either a hash, or block syntax (see next task)
-      task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
-      task.add_command({:name => "echo 'i am testing everything with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
-    end
-
-    desc "override command-name with environment variable"
-    rototiller_task :test => :parent_task do |task|
-      # block syntax here. We give up some lines for more readability
-      task.add_command do |cmd|
-        cmd.name         = 'test'
-        cmd.override_env = 'ECHO_EXECUTABLE'
-      end
-      task.add_flag({:name => '-f', :default => 'Rakefile'})
-    end
-
-    desc "override flag values with environment variables"
-    rototiller_task :test_flag_env do |task|
-      task.add_command do |cmd|
-        cmd.name = 'test'
-      end
-      task.add_flag do |flag|
-        flag.name         = '-f'
-        flag.default      = 'Rakefile'
-        flag.override_env = 'FLAG_VALUE'
-      end
-    end
-
-    desc "do not include flag if the final value (either the default or override_env) is nil or empty and not required. add and control switches or boolean flags"
-    rototiller_task :test_flag_env do |task|
-      task.add_command do |cmd|
-        cmd.name = 'test'
-      end
-      task.add_flag do |flag|
-        flag.name         = '-f'
-        flag.default      = ''
-        flag.override_env = 'FLAG_VALUE'
-        flag.required     = false
-      end
-      # examples:
-      # add a boolean option (switch)
-      #task.add_flag({:name => '--switch1', :is_boolean => true})
-      # add a switch which defaults to "off"
-      #task.add_flag({:name => '-s',  :default => '', :is_boolean => true})
-      # add a switch with environment override
-      #task.add_flag({:name => '--switch3', :is_boolean => true, :override_env => 'TEST_FLAG_ENV_SWITCH3'})
-    end
-
-
-    desc "override command argument values with environment variables"
-    rototiller_task :test_arg_env do |task|
-      task.add_command do |cmd|
-        cmd.name                  = 'ls'
-        cmd.argument              = 'Rakefile'
-        cmd.argument_override_env = 'FILENAME'
-      end
-    end
-
-<a name="use"></a>
-## Use
-(with the above sample Rakefile)
-
-    $) rake -T
-    rake parent_task  # some parent task
-    rake test         # test all the things
-
-    $) rake -D
-    rake parent_task
-        task dependencies work. this one also uses an environment variable
-    rake test
-        override command-name with environment variable
-
-    # added environment variable defaults are set, implicitly, if not found
-    #   this way, their value can be used in the task
-    $) rake test
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
-    i am testing everything with $RANDOM_VAR = default value
-    The CLI flag -f will be used with value Rakefile.
-
-    $) rake parent_task RANDOM_VAR=redrum
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
-    i am testing everything with $RANDOM_VAR = redrum
-
-    $) rake test ECHO_EXECUTABLE='ls' --verbose
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
-    echo 'i am testing everything with $RANDOM_VAR = default value'
-    i am testing everything with $RANDOM_VAR = default value
-    The CLI flag -f will be used with value Rakefile.
-
-    ls -f Rakefile
-    Rakefile
-
-    $) rake test_flag_env
-    The CLI flag -f will be used with value Rakefile.
-    $) echo $?
-    0
-
-    $) rake test_flag_env --verbose
-    The CLI flag -f will be used with value Rakefile.
-
-    test -f Rakefile
-
-    $) rake test_flag_env --verbose FLAG_VALUE='README.md'
-    The CLI flag -f will be used with value README.md.
-
-    test -f README.md
-
-    $) rake test_flag_env --verbose FLAG_VALUE='nonesuch'
-    The CLI flag -f will be used with value README.md.
-
-    test -f README.md
-    test -f nonesuch failed
-
-    $) rake test_arg_env
-    Rakefile
-
-    $) rake test_arg_env FILENAME=README.md
-    README.md
-
-## Issues
-
-* none. it's perfect
-* [Jira: Rototiller](https://tickets.puppetlabs.com/issues/?jql=project%20%3D%20QA)
-
-## More Documentation
-
-Rototiller is documented using yard
-to view yard docs, including internal Classes and Modules:
-
-First build a local copy of the gem
-
-    $) bundle exec rake build
-
-Next start the yard server
-
-    $) bundle exec yard server
-
-Finally navigate to http://0.0.0.0:8808/ to view the documentation
-
-## Maintainers
-* [Zach Reichert](zach.reichert@puppetlabs.com), github:[zreichert](https://github.com/zreichert), jira:zach.reichert
-* [Eric Thompson](erict@puppetlabs.com), github:[er0ck](https://github.com/er0ck), jira:erict
-* [QA](qa-team@puppetlabs.com)

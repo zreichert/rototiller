@@ -1,36 +1,28 @@
-require 'rototiller/utilities/env_var'
-require 'rototiller/utilities/param_collection'
-require 'rototiller/utilities/env_collection'
-require 'rototiller/utilities/flag_collection'
-require 'rototiller/utilities/command_flag'
-require 'rototiller/utilities/command'
-require 'rototiller/utilities/block_syntax_object'
+require 'rototiller/task/collections/env_collection'
+require 'rototiller/task/collections/command_collection'
 require 'rake/tasklib'
 
 module Rototiller
   module Task
-    class RototillerTask < ::Rake::TaskLib
-      #TODO rename instance vars and methods to not match sub blocks
-      attr_reader :name
-      attr_reader :command
 
+    class RototillerTask < ::Rake::TaskLib
+      attr_reader :name
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
+      # FIXME: make fail_on_error per-command
       attr_accessor :fail_on_error
-
       # A message to print to stderr when there are failures.
+      # FIXME: make this per-command
       attr_accessor :failure_message
 
       def initialize(*args, &task_block)
         @name          = args.shift
         @fail_on_error = true
-        #TODO refactor or remove
-        @command = Rototiller::Command.new
-        @command.name = 'echo empty RototillerTask. You should define a command, send a block, or EnvVar to track.'
+        @commands      = CommandCollection.new
+
         # rake's in-task implied method is true when using --verbose
         @verbose       = verbose == true
         @env_vars      = EnvCollection.new
-        @flags         = FlagCollection.new
 
         define(args, &task_block)
       end
@@ -49,29 +41,22 @@ module Rototiller
       # @option args [Boolean] :required Is used internally by CommandFlag, ignored for a standalone EnvVar
       #
       # for block {|a| ... }
-      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods track hash keys
-      def add_env(*args,&block)
-        raise ArgumentError.new("add_env takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message, :required]
-        add_param(@env_vars, EnvVar, attributes, args, {:set_env => true}, &block)
-      end
-
-      # adds command line flags to be used in a command
-      # @param       [Hash]   args          hashes of information about the command line flag
-      # @option args [String] :name         The command line flag
-      # @option args [String] :value        The value for the command line flag
-      # @option args [String] :message      A message describing the use of this command line flag
-      # @option args [String] :override_env An environment variable used to override the flag value
-      # @option args [Boolean] :required    Indicates whether an error should be raised
-      #                                     if the value is nil or empty string, vs not including the flag.
-      # @option args [Boolean] :is_boolean  Is the flag really a switch? Is it a boolean-flag?
-      #
-      # for block {|a| ... }
-      # @yield [a] Optional block syntax allows you to specify information about the command line flag, available methods track hash keys
-      def add_flag(*args, &block)
-        raise ArgumentError.new("add_flag takes a block or a hash") if !args.empty? && block_given?
-        attributes = [:name, :default, :message, :override_env, :required, :is_boolean]
-        add_param(@flags, CommandFlag, attributes, args, &block)
+      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
+      def add_env(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
+        # this is kinda annoying we have to do this for all params? (not DRY)
+        #   have to do it this way so EnvVar doesn't become a collection
+        #   but if this gets moved to a mixin, it might be more tolerable
+        if block_given?
+          @env_vars.push(EnvVar.new(&block))
+        else
+          #TODO: test this with array and non-array single hash
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @env_vars.push(EnvVar.new(arg))
+          end
+        end
       end
 
       # adds command to be executed by task
@@ -80,42 +65,48 @@ module Rototiller
       # @option arg [String] :override_env An environment variable used to override the command to be executed by the task
       #
       # for block {|a| ... }
-      # @yield [a] Optional block syntax allows you to specify information about command, available methods track hash keys
-      def add_command(args={}, &block)
-        attributes = [:name, :override_env, :argument, :argument_override_env]
+      # @yield [a] Optional block syntax allows you to specify information about command, available methods match hash keys
+      def add_command(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
         if block_given?
-          attribute_hash = pull_params_from_block(attributes, &block).to_h
+          @commands.push(Command.new(&block))
         else
-          attribute_hash = args
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @commands.push(Command.new(arg))
+          end
         end
-        @command = Rototiller::Command.new(attribute_hash)
       end
+
 
       private
 
       # @private
+      # FIXME: separate out the exit stuff
       def print_messages
-        puts @flags.format_messages
+        puts @commands.format_messages
         puts @env_vars.format_messages
         exit_code = 1
-        exit exit_code if @env_vars.stop? || @flags.stop?
+        exit exit_code if @env_vars.stop? || @commands.stop?
       end
 
       # @private
       def run_task
         print_messages
-        raise ArgumentError.new("flags set with no command") if @flags && !@command.name
-        command_str = [
-            (@command.name if @command.name), @flags.to_s, (@command.argument if @command.argument)
-        ].delete_if{ |i| [nil, '', false].any?{|forbidden| i == forbidden}}.join(' ')
-        puts command_str if @verbose
+        @commands.each do |command|
+          puts command if @verbose
 
-        return if system(command_str)
-        puts failure_message if failure_message
+          command.run
+          command_failed = command.result.exit_code > 0
 
-        return unless fail_on_error
-        $stderr.puts "#{command_str} failed" if @verbose
-        exit $?.exitstatus
+          $stderr.puts failure_message if failure_message && command_failed
+          $stderr.puts "'#{command}' failed" if @verbose && command_failed
+
+          exit command.result.exit_code if fail_on_error && command_failed
+        end
+        # might be useful in output of t.add_command()?  but if not, Command has #result
+        return @commands.map{ |command| command.result }
       end
 
       # @private
@@ -141,33 +132,7 @@ module Rototiller
         @verbose = verbosity
       end
 
-      # @private
-      def add_param(collection, param_class, param_array, args, opts={}, &block)
-
-        if block_given?
-
-          param_hash = pull_params_from_block(param_array, &block).to_h
-          param_hash[:set_env] = true if opts[:set_env]
-          collection.push(param_class.new(param_hash))
-        else
-
-          args.each do |arg|
-
-            #FIXME: add a test for this
-            raise ArgumentError.new("Argument must be a Hash. Received: '#{arg.class}'") unless arg.is_a?(Hash)
-            arg[:set_env] = true if opts[:set_env]
-            collection.push(param_class.new(arg))
-          end
-        end
-      end
-
-      # @private
-      def pull_params_from_block(param_array, &block)
-
-        block_syntax_obj = Rototiller::Block_syntax.new(param_array)
-        yield(block_syntax_obj)
-        block_syntax_obj
-      end
     end
+
   end
 end

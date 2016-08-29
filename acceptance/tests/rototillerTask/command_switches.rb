@@ -3,6 +3,7 @@ require 'rakefile_tools'
 require 'test_utilities'
 
 test_name 'C97821: can set switches (boolean options) for commands in a RototillerTask' do
+  skip_test 'switches disabled for now'
   extend Beaker::Hosts
   extend RakefileTools
   extend TestUtilities

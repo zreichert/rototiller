@@ -3,6 +3,7 @@ require 'rakefile_tools'
 require 'test_utilities'
 
 test_name 'C97820: can set key/value option in a RototillerTask' do
+  skip_test 'options disabled for now'
   extend Beaker::Hosts
   extend RakefileTools
   extend TestUtilities
