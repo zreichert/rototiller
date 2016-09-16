@@ -1,12 +1,16 @@
 require 'rototiller/utilities/color_text'
 require 'rototiller/task/params/env_var'
+require 'rototiller/task/collections/env_collection'
+require 'rototiller/task/mixable_methods/add_env'
+require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
 
-    class CommandFlag
+    class Option
 
       include Rototiller::ColorText
+      include BlockHandling
 
       # @return [String] the flag to be set on a CLI '-v' or '--verbose'
       attr_reader :flag
@@ -26,7 +30,10 @@ module Rototiller
       # @return [true, nil] if this flag/option is really a switch (boolean flag)
       attr_reader :is_boolean
 
-      # Creates a new instance of CommandFlag, holds information about desired state of a CLI flag
+      # @return [EnvCollection] the collection of EnvCollection associated with this option
+      attr_reader :env_vars
+
+      # Creates a new instance of Rototiller::Task::Option, holds information about desired state of a CLI Options
       # @param [Hash] attribute_hash hashes of information about the command line flag
       # @option attribute_hash [String] :name         The command line flag
       # @option attribute_hash [String] :value        The value for the command line flag
@@ -35,12 +42,48 @@ module Rototiller
       # @option attribute_hash [Boolean] :is_boolean Is the flag really a switch? Is it a boolean-flag?
       # @option attribute_hash [Boolean] :required Indicates whether an error should be raised
       # if the final value is nil or empty string, vs not including the flag.
-      def initialize(attribute_hash)
+      def initialize(args={}, &block)
+        #WIP
+        @env_vars = EnvCollection.new
+        if block_given?
+          required_attributes = [:name, :message, :is_boolean, :required, :default]
+          #classes to mix onto the block syntax object
+          required_modules_to_mix = [AddEnv]
+          attribute_hash = pull_params_from_block(required_attributes, required_modules_to_mix, &block)
+        else
+          attribute_hash = args
+        end
+
+        # check if an environment variable was added
+          #TODO fix this up, logic is hard :(
+        if attribute_hash[:add_env]
+          @override_env = EnvVar.new({:name => attribute_hash[:override_env], :default => attribute_hash[:name]})
+          @name = @override_env.value
+        else
+          @name = attribute_hash[:name]
+        end
+
+        # check if an argument_override_env is provided
+        if attribute_hash[:argument_override_env]
+          @argument_override_env = EnvVar.new({:name => attribute_hash[:argument_override_env], :default => attribute_hash[:argument]})
+          @argument = @argument_override_env.value
+        else
+          @argument = attribute_hash[:argument]
+        end
+      end
+
+
+
+
+
+        #######
+        old_logic =<<-OLD
         validate_attribute_hash(attribute_hash)
 
         @original_name = attribute_hash[:name]
         @message       = attribute_hash[:message]
         @is_boolean    = attribute_hash[:is_boolean] || false
+        @env_vars      = EnvCollection.new
 
         # handle :required
         attribute_hash[:required].is_a?(String) ? attribute_hash[:required] = (attribute_hash[:required].downcase == 'true') : attribute_hash[:required]
@@ -83,6 +126,7 @@ module Rototiller
           end
         end
       end
+OLD
 
       # The formatted message to be displayed to the user
       # @return [String] the CommandFlag's message, formatted with color

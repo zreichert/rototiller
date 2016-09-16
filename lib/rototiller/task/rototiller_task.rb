@@ -1,11 +1,15 @@
 require 'rototiller/task/collections/env_collection'
 require 'rototiller/task/collections/command_collection'
 require 'rake/tasklib'
+require 'rototiller/task/mixable_methods/add_env'
 
 module Rototiller
   module Task
 
     class RototillerTask < ::Rake::TaskLib
+
+      include Rototiller::Task::AddEnv
+
       attr_reader :name
       # Whether or not to fail Rake when an error occurs (typically when
       # examples fail). Defaults to `true`.
@@ -33,32 +37,6 @@ module Rototiller
         self.new(*args, &task_block)
       end
 
-      # adds environment variables to be tracked
-      # @param [Hash] args hashes of information about the environment variable
-      # @option args [String] :name The environment variable
-      # @option args [String] :default The default value for the environment variable
-      # @option args [String] :message A message describing the use of this variable
-      # @option args [Boolean] :required Is used internally by CommandFlag, ignored for a standalone EnvVar
-      #
-      # for block {|a| ... }
-      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
-      def add_env(*args, &block)
-        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
-        # this is kinda annoying we have to do this for all params? (not DRY)
-        #   have to do it this way so EnvVar doesn't become a collection
-        #   but if this gets moved to a mixin, it might be more tolerable
-        if block_given?
-          @env_vars.push(EnvVar.new(&block))
-        else
-          #TODO: test this with array and non-array single hash
-          args.each do |arg| # we can accept an array of hashes, each of which defines a param
-            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
-            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @env_vars.push(EnvVar.new(arg))
-          end
-        end
-      end
-
       # adds command to be executed by task
       # @param [Hash] args hash of information about the command to be executed
       # @option arg [String] :name The command to be executed
@@ -78,7 +56,6 @@ module Rototiller
           end
         end
       end
-
 
       private
 

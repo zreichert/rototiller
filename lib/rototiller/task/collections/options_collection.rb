@@ -3,10 +3,10 @@ require 'rototiller/task/collections/param_collection'
 module Rototiller
   module Task
 
-    class FlagCollection < ParamCollection
+    class OptionsCollection < ParamCollection
 
       def push(*args)
-        check_classes(CommandFlag, *args)
+        check_classes(CommandOption, *args)
         super
       end
 

@@ -34,3 +34,4 @@ end
 
 # Specify your gem's dependencies in rototiller.gemspec
 gemspec
+gem 'pry'

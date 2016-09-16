@@ -2,6 +2,10 @@ require 'open3'
 require 'rototiller/task/params'
 require 'rototiller/task/params/env_var'
 require 'rototiller/task/block_handling'
+require 'rototiller/task/mixable_methods/add_option'
+require 'rototiller/task/mixable_methods/add_switch'
+require 'rototiller/task/mixable_methods/add_env'
+require 'rototiller/task/collections/options_collection'
 
 module Rototiller
   module Task
@@ -25,15 +29,21 @@ module Rototiller
       # @return [EnvVar] the ENV that is equal to the argument to be used with this command
       attr_accessor :argument_override_env
 
+      attr_accessor :options
+
       # Creates a new instance of Command, holds information about desired state of a command
       # @param [Hash,Array<Hash>] args hashes of information about the command
       # for block { |b| ... }
       # @yield Command object with attributes matching method calls supported by Command
       # @return Command object
       def initialize(args={}, &block)
+        #WIP
+        @options = OptionsCollection.new
         if block_given?
-          required_attributes = [:name, :override_env, :argument, :argument_override_env]
-          attribute_hash = pull_params_from_block(required_attributes, &block)
+          required_attributes = [:name, :argument, :argument_override_env]
+          #classes to mix onto the block syntax object
+          required_modules_to_mix = [AddOption, AddSwitch, AddEnv]
+          attribute_hash = pull_params_from_block(required_attributes, required_modules_to_mix, &block)
         else
           attribute_hash = args
         end
@@ -56,6 +66,7 @@ module Rototiller
         else
           @argument = attribute_hash[:argument]
         end
+        require 'pry';binding.pry
       end
 
       # convert a Command object to a string (runable command string)
