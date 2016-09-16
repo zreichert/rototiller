@@ -5,7 +5,7 @@ require 'rototiller/task/block_handling'
 module Rototiller
   module Task
 
-    # The main EnvVAr type to implement envrironment variable handling
+    # The main EnvVar type to implement envrironment variable handling
     #   contains its messaging, status, and whether it is required.
     #   The rototiller Param using it knows what to do with its value.
     # @since v0.1.0
@@ -22,7 +22,7 @@ module Rototiller
       include Rototiller::ColorText
       include BlockHandling
 
-      attr_accessor :var
+      attr_accessor :name
       attr_accessor :default
       attr_reader :required
       # FIXME: does (api) user need to read this directly?
@@ -43,12 +43,13 @@ module Rototiller
         if block_given?
           required_attributes = [:name, :default, :message, :required, :set_env] # maybe should be a CONST
           attribute_hash = pull_params_from_block(required_attributes, &block)
+          yield self
         else
           attribute_hash = args
         end
 
         raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
-        @var = attribute_hash[:name]
+        @name = attribute_hash[:name]
         @user_message = attribute_hash[:message]
         @default = attribute_hash[:default]
         @set_env = attribute_hash[:set_env] || false
@@ -60,7 +61,7 @@ module Rototiller
       end
 
       # The formatted messages about this EnvVar's status to be displayed to the user
-      # @return [String] the EnvVar's message, formatted for color and meaningful to the state of the EnvVAr
+      # @return [String] the EnvVar's message, formatted for color and meaningful to the state of the EnvVar
       def message
         if message_level == :error
           level_str = 'ERROR:'
@@ -69,7 +70,7 @@ module Rototiller
         elsif message_level == :warning
           level_str = 'WARNING:'
         end
-        message_prepend = "#{level_str} The environment variable: '#{@var}'"
+        message_prepend = "#{level_str} The environment variable: '#{@name}'"
         if get_message_type == MESSAGE_TYPES[:default_noexist]
           return yellow_text("#{message_prepend} is not set. Proceeding with default value: '#{@default}': #{@user_message}")
         end
@@ -77,7 +78,7 @@ module Rototiller
           return yellow_text("#{message_prepend} is not set, but is not required. Proceeding with no flag: #{@user_message}")
         end
         if get_message_type == MESSAGE_TYPES[:exist]
-          return green_text("#{message_prepend} was found with value: '#{ENV[@var]}': #{@user_message}")
+          return green_text("#{message_prepend} was found with value: '#{ENV[@name]}': #{@user_message}")
         end
         if get_message_type == MESSAGE_TYPES[:nodefault_noexist]
           return red_text("#{message_prepend} is required: #{@user_message}")
@@ -87,13 +88,13 @@ module Rototiller
       # The string representation of this EnvVar; the value on the system, or nil
       # @return [String] the EnvVar's value
       def to_str
-        ENV[@var]
+        ENV[@name]
       end
       alias :to_s :to_str
 
       # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def var=(var)
-        @var = var
+        @name = var
         reset
       end
 
@@ -119,14 +120,14 @@ module Rototiller
 
       # @private
       def reset
-        @value = ENV[@var] || @default
-        ENV[@var] = @value if @set_env
+        @value = ENV[@name] || @default
+        ENV[@name] = @value if @set_env
         set_message_level
       end
 
       # @private
       def check
-        ENV.key?(@var)
+        ENV.key?(@name)
       end
 
       # @private

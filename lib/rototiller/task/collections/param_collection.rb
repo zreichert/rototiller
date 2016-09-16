@@ -7,7 +7,7 @@ module Rototiller
 
       extend Forwardable
 
-      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map
+      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map, :any?, :compact
 
       # collect a given task's params
       def initialize

@@ -72,14 +72,19 @@ module Rototiller
       def add_command(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
         if block_given?
-          @commands.push(Command.new(&block))
+          new_command = Command.new(&block)
+          @commands.push(new_command)
         else
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @commands.push(Command.new(arg))
+            new_command = Command.new(arg)
+            @commands.push(new_command)
           end
         end
+        # because add_command is at the top of the hierarchy chain, it has to return its produced object
+        #   otherwise we yield on the blocks inside and don't have add_env that can handle an Array of hashes.
+        return new_command
       end
 
 
