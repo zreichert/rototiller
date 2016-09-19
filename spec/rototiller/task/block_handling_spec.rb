@@ -55,6 +55,28 @@ shared_examples_for Rototiller::Task::BlockHandling do
       expect(@obj.pull_params_from_block(params,&block)).to raise_error(NameError)
     end
 
+    context 'nested block handling should be ignored' do
+      it 'should handle blocks with nested blocks' do
+        block = Proc.new do |b|
+          b.name = 'value'
+          b.other { |x| x.something }
+        end
+        expected_hash = {:name=>"value", :other=>nil}
+        params = expected_hash.keys
+        final_expected = {:name => 'value'}
+        expect(@obj.pull_params_from_block(params,&block)).to eq final_expected
+      end
+      it 'should handle blocks with nested hashes' do
+        block = Proc.new do |b|
+          b.name = 'value'
+          b.other({ :name => 'something' })
+        end
+        expected_hash = {:name=>"value", :other=>nil}
+        params = expected_hash.keys
+        final_expected = {:name => 'value'}
+        expect(@obj.pull_params_from_block(params,&block)).to eq final_expected
+      end
+    end
   end
 
 end

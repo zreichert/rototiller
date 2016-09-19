@@ -52,7 +52,7 @@ module Rototiller
               describe '.var' do
 
                 it 'returns the var' do
-                  expect(@env_var.var).to eq(@var_name)
+                  expect(@env_var.name).to eq(@var_name)
                 end
               end
 
