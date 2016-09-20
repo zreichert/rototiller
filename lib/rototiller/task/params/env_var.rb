@@ -5,28 +5,29 @@ require 'rototiller/task/block_handling'
 module Rototiller
   module Task
 
+    # The main EnvVAr type to implement envrironment variable handling
+    #   contains its messaging, status, and whether it is required.
+    #   The rototiller Param using it knows what to do with its value.
+    # @since v0.1.0
+    # @attr [String]         var      The name of the env_var in the system environment
+    # @attr [String]         default  The default value of this env_var to use if
+    #   the system ENV does not have a value this implies required is false
+    # @attr_reader [Boolean] required Whether the env_var should error if no value is set.
+    #   Used internally by CommandFlag, ignored for standalone EnvVar.
+    # @attr_reader [Symbol] message_level the debug level of the message, ':warning', ':error', ':info'
+    # @attr_reader [Boolean] stop     Whether the state of the EnvVar requires the task to stop
+    # @attr_reader [Boolean] value    The value of the ENV based on specified default and environment state
     class EnvVar < RototillerParam
       MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
       include Rototiller::ColorText
       include BlockHandling
 
-      # @return [String] the value of the :name argument
       attr_accessor :var
-
-      # @return [String] the value of the :default argument
       attr_accessor :default
-
-      # @return  [true, nil] If the env_var should error if no value is set. Used internally by CommandFlag, ignored for standalone EnvVar.
       attr_reader :required
-
-      # @return [Symbol] the debug level of the message, ':warning', ':error', ':info'
       # FIXME: does (api) user need to read this directly?
       attr_reader :message_level
-
-      # @return [true, nil] if the state of the EnvVar requires the task to stop
       attr_reader :stop
-
-      # @return [String] the value of the ENV based on specified default and environment state
       attr_reader :value
 
       # Creates a new instance of EnvVar, holds information about the ENV in the environment
@@ -83,38 +84,52 @@ module Rototiller
         end
       end
 
+      # The string representation of this EnvVar; the value on the system, or nil
+      # @return [String] the EnvVar's value
+      def to_str
+        ENV[@var]
+      end
+      alias :to_s :to_str
+
       # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def var=(var)
         @var = var
         reset
       end
 
+      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def default=(default)
         @default = default
         reset
       end
 
+      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def message=(message)
         @user_message = message
         reset
       end
 
+      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
       def required=(required)
         @required = required
         reset
       end
 
       private
+
+      # @private
       def reset
         @value = ENV[@var] || @default
         ENV[@var] = @value if @set_env
         set_message_level
       end
 
+      # @private
       def check
         ENV.key?(@var)
       end
 
+      # @private
       def get_message_type
         if (value.nil? || value.empty?) && !required
           MESSAGE_TYPES[:not_required]
@@ -130,6 +145,7 @@ module Rototiller
         end
       end
 
+      # @private
       def set_message_level
         case get_message_type
         when MESSAGE_TYPES[:nodefault_noexist]

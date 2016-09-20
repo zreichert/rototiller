@@ -5,13 +5,16 @@ require 'rake/tasklib'
 module Rototiller
   module Task
 
+    # The main task type to implement base rototiller features in a Rake task
+    # @since v0.1.0
+    # @attr_reader [String] name The name of the task for calling via Rake
+    # @attr [Boolean] fail_on_error Whether or not to fail Rake when an error
+    #   occurs (typically when examples fail). Defaults to `true`.
+    # @attr [String] failure_message A message to print to stderr when there are failures.
     class RototillerTask < ::Rake::TaskLib
       attr_reader :name
-      # Whether or not to fail Rake when an error occurs (typically when
-      # examples fail). Defaults to `true`.
       # FIXME: make fail_on_error per-command
       attr_accessor :fail_on_error
-      # A message to print to stderr when there are failures.
       # FIXME: make this per-command
       attr_accessor :failure_message
 
