@@ -7,17 +7,18 @@ test_name 'C97827: can set envvar to override command name when using task.comma
   extend RakefileTools
   extend TestUtilities
 
-  step 'Test command with an override_env that has a value' do
+  #FIXME: this needs to use rakefile_segment and a single upload of the single rakefile
 
-    override_env = 'BROCKSAMSON'
-    env_key = 'THIS_WAS_IN_ENV'
-    env_value = 'echo ' << env_key
+  @task_name    = 'commands_with_override'
+  step 'add_env does not override when missing' do
+    override_env = 'BROCKSAMSON0'
+    validation_string = random_string
+    env_value = 'echo ' << validation_string
 
-    @task_name    = 'commands_with_override'
     rakefile_contents = <<-EOS
       #{rototiller_rakefile_header}
       Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
-          t.add_command({:name => 'echo', :override_env => '#{override_env}'})
+          t.add_command({:name => 'echo success', :add_env => {:name => '#{override_env}'}})
       end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
@@ -25,28 +26,102 @@ test_name 'C97827: can set envvar to override command name when using task.comma
 
     execute_task_on(sut, @task_name, rakefile_path) do |result|
       # command was used that was supplied by the override_env
-      assert_match(/^#{env_key}/, result.stdout, 'The correct command was not observed')
+      assert_match(/^success/, result.stdout, 'The correct command was not observed')
     end
   end
 
-  step 'Add Command with block syntax and unset override_env' do
-    override_env = 'EMPTYENV'
-    @task_name    = 'commands_with_override_no_value'
-    validation_string = (0...10).map { ('a'..'z').to_a[rand(26)] }.join
+  step 'add_env as hash in command hash' do
+    override_env = 'BROCKSAMSON1'
+    validation_string = random_string
+    env_value = 'echo ' << validation_string
+
+    rakefile_contents = <<-EOS
+      #{rototiller_rakefile_header}
+      Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
+          t.add_command({:name => 'nonesuch', :add_env => {:name => '#{override_env}'}})
+      end
+    EOS
+    rakefile_path = create_rakefile_on(sut, rakefile_contents)
+    sut.add_env_var(override_env, env_value)
+
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
+      # command was used that was supplied by the override_env
+      assert_match(/^#{validation_string}/, result.stdout, 'The correct command was not observed')
+    end
+  end
+
+  step 'add_env as block in command block' do
+    override_env = 'BROCKSAMSON2'
+    validation_string = random_string
+    env_value = 'echo ' << validation_string
+
+    rakefile_contents = <<-EOS
+      #{rototiller_rakefile_header}
+      Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
+        t.add_command do |c|
+          c.name = 'nonesuch'
+          c.add_env do |e|
+            e.name = '#{override_env}'
+          end
+        end
+      end
+    EOS
+    rakefile_path = create_rakefile_on(sut, rakefile_contents)
+    sut.add_env_var(override_env, env_value)
+
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
+      assert_match(/^#{validation_string}/, result.stdout, 'The correct command was not observed')
+    end
+  end
+
+  step 'add_env as hash in command block' do
+    override_env = 'BROCKSAMSON3'
+    validation_string = random_string
+    env_value = 'echo ' << validation_string
 
     rakefile_contents = <<-EOS
       #{rototiller_rakefile_header}
       Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
           t.add_command do |c|
-            c.name = 'echo #{validation_string}'
-            c.override_env = '#{override_env}'
+            c.name = 'nonesuch'
+            c.add_env({:name => '#{override_env}'})
           end
       end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
+    sut.add_env_var(override_env, env_value)
 
     execute_task_on(sut, @task_name, rakefile_path) do |result|
-      assert_match(/#{validation_string}/, result.stdout, 'The correct command was not observed')
+      assert_match(/^#{validation_string}/, result.stdout, 'The correct command was not observed')
+    end
+  end
+
+  step 'add_env multiples as both hash and block' do
+    override_env = 'BROCKSAMSON4'
+    override_env2 = 'BROCKSAMSON5'
+    validation_string = random_string
+    validation_string2 = random_string
+    env_value = 'echo ' << validation_string
+    env_value2 = 'echo ' << validation_string2
+
+    rakefile_contents = <<-EOS
+      #{rototiller_rakefile_header}
+      Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
+          t.add_command do |c|
+            c.name = 'nonesuch'
+            c.add_env({:name => '#{override_env}'})
+            c.add_env do |e|
+              e.name = '#{override_env2}'
+            end
+          end
+      end
+    EOS
+    rakefile_path = create_rakefile_on(sut, rakefile_contents)
+    sut.add_env_var(override_env, env_value)
+    sut.add_env_var(override_env2, env_value2)
+
+    execute_task_on(sut, @task_name, rakefile_path) do |result|
+      assert_match(/^#{validation_string2}/, result.stdout, 'The correct command was not observed')
     end
   end
 

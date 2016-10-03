@@ -35,100 +35,91 @@ Rototiller has 4 main _types_ of arguments that can be passed to a command in a 
 
 <a name="use"></a>
 ## Use
-It's just like normal Rake. We just added a bunch of task methods and messaging!
+It's just like normal Rake. We just added a bunch of environment variable handling and messaging!
 (with the below example Rakefile):
 
     $) rake -T
-    rake parent_task  # some parent task
-    rake test         # test all the things
+    rake child        # override command-name with environment variable
+    rake parent_task  # parent task for dependent tasks
 
     $) rake -D
-    rake parent_task
-        task dependencies work. this one also uses an environment variable
-    rake test
+    rake child
         override command-name with environment variable
 
+    rake parent_task
+        parent task for dependent tasks. this one also uses two environment variables and two commands
 
 ### Examples
     require 'rototiller'
 
-    desc "task dependencies work. this one also uses an environment variable"
+    desc "parent task for dependencies test. this one also uses an environment variable"
     rototiller_task :parent_task do |task|
       # most method initializers take either a hash, or block syntax (see next task)
       task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
+      task.add_env({:name     => 'RANDOM_VAR2', :default => 'default value2'})
       task.add_command({:name => "echo 'i am testing everything with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
+      task.add_command({:name => "echo 'some other command!'"})
     end
-produces:
 
-    $) rake parent_task RANDOM_VAR=redrum
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
-    i am testing everything with $RANDOM_VAR = redrum
-&nbsp;
-
-    desc "override command-name with environment variable"
-    rototiller_task :test => :parent_task do |task|
-      # block syntax here. We give up some lines for more readability
-      task.add_command do |cmd|
-        cmd.name         = 'test'
-        cmd.override_env = 'ECHO_EXECUTABLE'
-      end
-      task.add_command({:name => "echo $NONESUCH"})
-    end
 produces:
 
     # added environment variable defaults are set, implicitly, if not found
     #   this way, their value can be used in the task
-    $) rake test
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
-    i am testing everything with $RANDOM_VAR = default value
-    The CLI flag -f will be used with value Rakefile.
+    # FIXME... this is a bug?  i think it's supposed to set vars with default values even at task level??
+    $) rake parent_task
+    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
+    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
+    i am running this command with $RANDOM_VAR =
+    some other command!
 
-    $) rake test ECHO_EXECUTABLE='ls' --verbose
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'default value':
-    echo 'i am testing everything with $RANDOM_VAR = default value'
-    i am testing everything with $RANDOM_VAR = default value
-    The CLI flag -f will be used with value Rakefile.
-
-    ls -f Rakefile
-    Rakefile
+    $) rake parent_task RANDOM_VAR=redrum
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
+    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
+    i am running this command with $RANDOM_VAR = redrum
+    some other command!
 &nbsp;
 
-    desc "override command argument values with environment variables"
-    rototiller_task :test_arg_env do |task|
+    desc "override a command-name with environment variable"
+    rototiller_task :child => :parent_task do |task|
+      task.add_command({:name => 'nonesuch', :add_env => {:name => 'COMMAND_EXE1'}})
+      # block syntax here. We give up some lines for more readability
       task.add_command do |cmd|
-        cmd.name                  = 'ls'
-        cmd.argument              = 'Rakefile' # FIXME: this will change to `#add_arg`
-        cmd.argument_override_env = 'FILENAME'
+        cmd.name = 'meneither'
+        cmd.add_env({:name => 'COMMAND_EXE2'})
       end
     end
+
 produces:
 
-    $) rake test_arg_env
-    The CLI flag -f will be used with value Rakefile.
-    $) echo $?
-    0
+    # we didn't override the command with its env_var, so shell complains about nonsuch and exits
+    $ rake child RANDOM_VAR=redrum
+    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
+    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
+    i am running this command with $RANDOM_VAR = redrum
+    some other command!
+    sh: nonesuch: command not found
 
-    $) rake test_arg_env --verbose
-    The CLI flag -f will be used with value Rakefile.
+    # now we've overridden the first command to echo partial success
+    #  but the next command was not overridden by its environment variable, which has no default
+    $ rake child COMMAND_EXE1='echo partial success'
+    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
+    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
+    i am running this command with $RANDOM_VAR =
+    some other command!
+    partial success
+    sh: meneither: command not found
 
-    test -f Rakefile
+    # NOW our silly example works!
+    $ rake child COMMAND_EXE1='echo partial success' COMMAND_EXE2='echo awwww yeah!'
+    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
+    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
+    i am running this command with $RANDOM_VAR =
+    some other command!
+    partial success
+    awwww yeah!
 
-    $) rake test_arg_env --verbose FLAG_VALUE='README.md'
-    The CLI flag -f will be used with value README.md.
+&nbsp;
 
-    test -f README.md
-
-    $) rake test_arg_env --verbose FLAG_VALUE='nonesuch'
-    The CLI flag -f will be used with value README.md.
-
-    test -f README.md
-    test -f nonesuch failed
-
-    $) rake test_arg_env
-    Rakefile
-
-    $) rake test_arg_env FILENAME=README.md
-    README.md
 
 ## Issues
 

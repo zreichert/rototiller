@@ -6,6 +6,30 @@ module Rototiller::Task
 
     [:new, :define_task].each do |init_method|
       let(:task) { described_class.send(init_method) }
+
+      before(:each) do
+        # stub out all the PRY env use, or the mocks for ENV below will break pry
+        #pryrc = ENV['PRYRC']
+        #disable_pry = ENV['DISABLE_PRY']
+        #home = ENV['HOME']
+        #ansicon = ENV['ANSICON']
+        #term = ENV['TERM']
+        #pager = ENV['PAGER']
+        #rake_columns = ENV['RAKE_COLUMNS']
+        #lines = ENV['LINES']
+        #rows = ENV['ROWS']
+        #columns = ENV['COLUMNS']
+        #allow(ENV).to receive(:[]).with('PRYRC').and_return(pryrc)
+        #allow(ENV).to receive(:[]).with('DISABLE_PRY').and_return(disable_pry)
+        #allow(ENV).to receive(:[]).with('HOME').and_return(home)
+        #allow(ENV).to receive(:[]).with('ANSICON').and_return(ansicon)
+        #allow(ENV).to receive(:[]).with('TERM').and_return(term)
+        #allow(ENV).to receive(:[]).with('PAGER').and_return(pager)
+        #allow(ENV).to receive(:[]).with('RAKE_COLUMNS').and_return(rake_columns)
+        #allow(ENV).to receive(:[]).with('LINES').and_return(lines)
+        #allow(ENV).to receive(:[]).with('ROWS').and_return(rows)
+        #allow(ENV).to receive(:[]).with('COLUMNS').and_return(columns)
+      end
       context "new: no args, no block" do
         it "inits members with '#{init_method}' method" do
           expect(task.name).to be nil
@@ -111,7 +135,54 @@ module Rototiller::Task
         end
       end
 
-      context 'with env vars' do
+      # test multiple layers of block/hash handling
+      # FIXME: move to integration layer
+      context '#add_command' do
+        context '#add_env' do
+
+          it 'can override command name with env_var' do
+            c = task.add_command({:name => 'echo'})
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+            c.add_env({:name => 'BLAH'})
+            expect(c.name).to eq('my_shiny_new_command')
+          end
+          it 'can override command name with env_var in block as block' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+            task.add_command do |c|
+              c.name = 'nonesuch'
+              c.add_env do |e|
+                e.name = 'BLAH'
+              end
+              # this won't yet be set before add_command completes. is this okay?
+              #expect(c.name).to eq('my_shiny_new_command')
+            end
+            expect(task).to receive(:exit)
+            expect{ described_run_task }
+              .to output(/my_shiny_new_command:( command)? not found/)
+              .to_stdout
+          end
+          it 'can override command name with env_var in block as hash' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+            task.add_command do |c|
+              c.name = 'nonesuch'
+              c.add_env({:name => 'BLAH'})
+              # this won't yet be set before add_command completes. is this okay?
+              #expect(c.name).to eq('my_shiny_new_command')
+            end
+            expect(task).to receive(:exit)
+            expect{ described_run_task }
+              .to output(/my_shiny_new_command:( command)? not found/)
+              .to_stdout
+          end
+
+        end
+      end
+
+
+      context '#add_env' do
       # add_env(EnvVar.new(), EnvVar.new(), EnvVar.new())
       # add_env('FOO', 'This is how you use FOO', 'default_value')
         #def initialize(var, message, default=false)

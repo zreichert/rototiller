@@ -7,7 +7,7 @@ module Rototiller
 
       extend Forwardable
 
-      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map
+      def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map, :any?, :compact
 
       # collect a given task's params
       def initialize
@@ -35,6 +35,14 @@ module Rototiller
         filters ? filter_contents(filters).each(&build_message) : @collection.each(&build_message)
         formatted_message
       end
+
+      # Do any of the contents of this ParamCollection require the task to stop
+      # @return [true, nil] should the values of this ParamCollection stop the task
+      def stop?
+        @collection.any?{ |param| param.stop }
+      end
+
+      private
 
       #@private
       def filter_contents(filters={})
@@ -69,13 +77,6 @@ module Rototiller
         end
       end
 
-      # Do any of the contents of this ParamCollection require the task to stop
-      # @return [true, nil] should the values of this ParamCollection stop the task
-      def stop?
-        @collection.any?{ |param| param.stop }
-      end
-
-      private :filter_contents, :check_classes
     end
 
   end

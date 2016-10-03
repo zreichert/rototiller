@@ -5,13 +5,16 @@ require 'rake/tasklib'
 module Rototiller
   module Task
 
+    # The main task type to implement base rototiller features in a Rake task
+    # @since v0.1.0
+    # @attr_reader [String] name The name of the task for calling via Rake
+    # @attr [Boolean] fail_on_error Whether or not to fail Rake when an error
+    #   occurs (typically when examples fail). Defaults to `true`.
+    # @attr [String] failure_message A message to print to stderr when there are failures.
     class RototillerTask < ::Rake::TaskLib
       attr_reader :name
-      # Whether or not to fail Rake when an error occurs (typically when
-      # examples fail). Defaults to `true`.
       # FIXME: make fail_on_error per-command
       attr_accessor :fail_on_error
-      # A message to print to stderr when there are failures.
       # FIXME: make this per-command
       attr_accessor :failure_message
 
@@ -69,14 +72,19 @@ module Rototiller
       def add_command(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
         if block_given?
-          @commands.push(Command.new(&block))
+          new_command = Command.new(&block)
+          @commands.push(new_command)
         else
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @commands.push(Command.new(arg))
+            new_command = Command.new(arg)
+            @commands.push(new_command)
           end
         end
+        # because add_command is at the top of the hierarchy chain, it has to return its produced object
+        #   otherwise we yield on the blocks inside and don't have add_env that can handle an Array of hashes.
+        return new_command
       end
 
 

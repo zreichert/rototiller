@@ -7,6 +7,22 @@ module Rototiller
     #   (each of command from hash and command from block
     shared_examples "a Command object" do
       before(:each) do
+        # stub out all the PRY env use, or the mocks for ENV below will break pry
+        pryrc = ENV['PRYRC']
+        disable_pry = ENV['DISABLE_PRY']
+        home = ENV['HOME']
+        ansicon = ENV['ANSICON']
+        term = ENV['TERM']
+        pager = ENV['PAGER']
+        lines = ENV['LINES']
+        allow(ENV).to receive(:[]).with('PRYRC').and_return(pryrc)
+        allow(ENV).to receive(:[]).with('DISABLE_PRY').and_return(disable_pry)
+        allow(ENV).to receive(:[]).with('HOME').and_return(home)
+        allow(ENV).to receive(:[]).with('ANSICON').and_return(ansicon)
+        allow(ENV).to receive(:[]).with('TERM').and_return(term)
+        allow(ENV).to receive(:[]).with('PAGER').and_return(pager)
+        allow(ENV).to receive(:[]).with('LINES').and_return(lines)
+
         @arg_name      = "VARNAME_#{(0...8).map { (65 + rand(26)).chr }.join}"
         @command_name  = 'echo'
         @args = {:name => @command_name, :argument => @arg_name}
@@ -51,9 +67,95 @@ module Rototiller
         end
       end
 
+      describe '#add_env' do
+        it 'can not directly set env_vars' do
+          expect{ command.env_vars << 'wah' }.to raise_error(NoMethodError)
+        end
+        describe 'as hash' do
+          it 'does not override command name with empty env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return(nil)
+            command.add_env({:name => 'BLAH'})
+            expect(command.name).to eq(@command_name)
+          end
+          it 'can override command name with env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+            command.add_env({:name => 'BLAH'})
+            expect(command.name).to eq('my_shiny_new_command')
+          end
+          it 'can override command name with multiple env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('ENV1').and_return('wrong')
+            allow(ENV).to receive(:[]).with('ENV2').and_return('right')
+            command.add_env({:name => 'ENV1'})
+            command.add_env({:name => 'ENV2'})
+            expect(command.name).to eq('right')
+          end
+          it 'can override command name with multiple env_var and one not set' do
+            allow(ENV).to receive(:[]).with('ENV1').and_return('rite')
+            allow(ENV).to receive(:[]).with('ENV2').and_return(nil)
+            command.add_env({:name => 'ENV1'})
+            command.add_env({:name => 'ENV2'})
+            expect(command.name).to eq('rite')
+          end
+          it 'can override command name with multiple env_var and first not set' do
+            allow(ENV).to receive(:[]).with('ENV1').and_return(nil)
+            allow(ENV).to receive(:[]).with('ENV2').and_return('rite')
+            command.add_env({:name => 'ENV1'})
+            command.add_env({:name => 'ENV2'})
+            expect(command.name).to eq('rite')
+          end
+        end
+        describe 'as block' do
+          it 'does not override command name with empty env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return(nil)
+            command.add_env { |e| e.name = 'BLAH' }
+            expect(command.name).to eq(@command_name)
+          end
+          it 'can override command name with env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+            command.add_env { |e| e.name = 'BLAH' }
+            expect(command.name).to eq('my_shiny_new_command')
+          end
+          it 'can override command name with multiple env_var' do
+            # set env first, or command might not have it in time
+            allow(ENV).to receive(:[]).with('ENV1').and_return('wrong')
+            allow(ENV).to receive(:[]).with('ENV2').and_return('right')
+            command.add_env { |e| e.name = 'ENV1' }
+            command.add_env { |e| e.name = 'ENV2' }
+            expect(command.name).to eq('right')
+          end
+          it 'can override command name with multiple env_var and one not set' do
+            allow(ENV).to receive(:[]).with('ENV1').and_return('rite')
+            allow(ENV).to receive(:[]).with('ENV2').and_return(nil)
+            command.add_env { |e| e.name = 'ENV1' }
+            command.add_env { |e| e.name = 'ENV2' }
+            expect(command.name).to eq('rite')
+          end
+          it 'can override command name with multiple env_var and first not set' do
+            allow(ENV).to receive(:[]).with('ENV1').and_return(nil)
+            allow(ENV).to receive(:[]).with('ENV2').and_return('rite')
+            command.add_env { |e| e.name = 'ENV1' }
+            command.add_env { |e| e.name = 'ENV2' }
+            expect(command.name).to eq('rite')
+          end
+        end
+      end
+
       describe '#to_str' do
-        #pending('FIXME: not important until we have a bunch of env_vars, options, etc')
-        # it 'should retain order in which params are added, somehow... a map?'
+        it 'returns the name' do
+          expect(command.to_s).to eq("#{@command_name} #{@arg_name}")
+        end
+        # the rest of these perms are covered above, no need to repeat here
+        it 'can override command name with env_var' do
+          # set env first, or command might not have it in time
+          allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_command')
+          command.add_env({:name => 'BLAH'})
+          expect(command.to_s).to eq("my_shiny_new_command #{@arg_name}")
+        end
       end
 
       describe '#message' do
@@ -65,7 +167,6 @@ module Rototiller
     end
 
     describe Command do
-
       it_behaves_like "a Command object" do
         let(:command)  { described_class.new(@args) }
       end

@@ -1,0 +1,23 @@
+require 'rototiller'
+
+# This example Rakefile should be kept in sync with the README.md file
+# This can be used by us and users as an example for all functionality
+
+desc "parent task for dependent tasks. this one also uses two environment variables and two commands"
+rototiller_task :parent_task do |task|
+  # most method initializers take either a hash, or block syntax (see next task)
+  task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
+  task.add_env({:name     => 'RANDOM_VAR2', :default => 'default value2'})
+  task.add_command({:name => "echo 'i am running this command with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
+  task.add_command({:name => "echo 'some other command!'"})
+end
+
+desc "override command-name with environment variable"
+rototiller_task :child => :parent_task do |task|
+  task.add_command({:name => 'nonesuch', :add_env => {:name => 'COMMAND_EXE1'}})
+  # block syntax here. We give up some lines for more readability
+  task.add_command do |cmd|
+    cmd.name = 'meneither'
+    cmd.add_env({:name => 'COMMAND_EXE2'})
+  end
+end

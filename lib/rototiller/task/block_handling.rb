@@ -5,7 +5,14 @@ module Rototiller
       class BlockSyntax
 
         def initialize(param_array)
-          self.class.class_eval { param_array.each { |i| attr_accessor i } }
+          self.class.class_eval { param_array.each do |i|
+            # define attribute setters for each param array. these are used
+            attr_writer   i
+            # define attribute getters with arguments for the nested attributes of the same name who receive args as hashes
+            #   these will not be used as the hash args are stripped off when we yield to the parent (caller)
+            define_method("#{i}") { |arg = nil| }
+          end
+          }
         end
 
         def to_h

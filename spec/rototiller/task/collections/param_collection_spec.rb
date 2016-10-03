@@ -51,7 +51,7 @@ module Rototiller
           messages = param_collection.format_messages
 
           vars.each do |var|
-            expect(messages).to match(/#{var.var}/)
+            expect(messages).to match(/#{var.name}/)
           end
         end
 
@@ -60,7 +60,7 @@ module Rototiller
           param_collection.push(*vars)
 
           [unset_env_1_no_default, unset_env_2_no_default].each do |var|
-            expected_message = /31mERROR: #{env_message_header} '#{var.var}' is required: description/
+            expected_message = /31mERROR: #{env_message_header} '#{var.name}' is required: description/
             expect(param_collection.format_messages({:stop => true})).to match(expected_message)
           end
         end
@@ -69,7 +69,7 @@ module Rototiller
           param_collection.push(*vars)
 
           [set_env_1_no_default, set_env_2_no_default].each do |var|
-            expected_message = /32mINFO: #{env_message_header} '#{var.var}' was found with value: '#{ENV[var.var]}'/
+            expected_message = /32mINFO: #{env_message_header} '#{var.name}' was found with value: '#{ENV[var.name]}'/
             expect(param_collection.format_messages({:default => nil, :message_level => :info})).to match(expected_message)
           end
         end
