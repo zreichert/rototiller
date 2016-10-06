@@ -13,8 +13,7 @@ end
 task :test => [:check_test]
 
 task :generate_host_config do |t, args|
-
-  target = ENV["TEST_TARGET"] || 'centos7-64'
+  target = ENV["LAYOUT"] || ENV["TEST_TARGET"]
   generate = "beaker-hostgenerator"
   generate += " #{target}"
   generate += " > acceptance/hosts.cfg"
@@ -24,7 +23,7 @@ end
 
 rototiller_task :acceptance => [:generate_host_config] do |t|
   # with a hash
-  t.add_env({:name => 'TEST_TARGET',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator', :set_env => true})
+  t.add_env({:name => 'LAYOUT',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator, TEST_TARGET env preempts this variable', :set_env => true})
   t.add_env({:name => 'RAKE_VER',   :default => '11.0',       :message => 'The rake version to use when running acceptance tests', :set_env => true})
 
   # with new block syntax
