@@ -1,0 +1,70 @@
+require 'rototiller/task/collections/env_collection'
+require 'rototiller/task/block_handling'
+
+module Rototiller
+  module Task
+
+    class Switch < RototillerParam
+      include BlockHandling
+
+      # @return [String] the command to be used, could be considered a default
+      attr_accessor :name
+
+      # Creates a new instance of Switch, holds information about desired state of a CLI switch
+      # @param [Hash] attribute_hash hashes of information about the command line switch
+      # @option attribute_hash [String] :name         The command line switch
+      def initialize(args={}, &block)
+        # the env_vars that override the name
+        @env_vars      = EnvCollection.new
+
+        if block_given?
+          allowed_attributes = [:name, :add_env]
+          attribute_hash = pull_params_from_block(allowed_attributes, &block)
+          yield self
+        else
+          attribute_hash = args
+        end
+
+        @name = @env_vars.last || attribute_hash[:name]
+        if attribute_hash[:add_env]
+          add_env(attribute_hash[:add_env])
+        end
+      end
+
+      # adds environment variables to be tracked, messaged.
+      #   In the Switch context this env_var overrides the switch "name"
+      # @param [Hash] args hashes of information about the environment variable
+      # @option args [String] :name The environment variable
+      # @option args [String] :default The default value for the environment variable
+      # @option args [String] :message A message describing the use of this variable
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
+      def add_env(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
+        # this is kinda annoying we have to do this for all params? (not DRY)
+        #   have to do it this way so EnvVar doesn't become a collection
+        #   but if this gets moved to a mixin, it might be more tolerable
+        if block_given?
+          @env_vars.push(EnvVar.new(&block))
+        else
+          #TODO: test this with array and non-array single hash
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @env_vars.push(EnvVar.new(arg))
+          end
+        end
+        @name = @env_vars.last if @env_vars.last
+      end
+
+      # The string representation of this Switch; the value sent by author, or overridden by any env_vars
+      # @return [String] the Switch's value
+      def to_str
+        @name.to_s
+      end
+      alias :to_s :to_str
+    end
+
+  end
+end
