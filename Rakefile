@@ -85,10 +85,27 @@ namespace :docs do
   end
 
   desc 'Generate static documentation'
-  task :gen => ['docs:clear','docs:class_graph'] do
+  task :gen do
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
     output = `yard doc`
+    puts output
+    if output =~ /\[warn\]|\[error\]/
+      begin # prevent pointless stack on purposeful fail
+        fail "Errors/Warnings during yard documentation generation"
+      rescue Exception => e
+        puts 'Yardoc generation failed: ' + e.message
+        exit 1
+      end
+    end
+    Dir.chdir( original_dir )
+  end
+
+  desc 'Check amount of documentation'
+  task :check do
+    original_dir = Dir.pwd
+    Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
+    output = `yard stats --list-undoc`
     puts output
     if output =~ /\[warn\]|\[error\]/
       begin # prevent pointless stack on purposeful fail
