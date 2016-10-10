@@ -13,7 +13,7 @@ end
 task :test => [:check_test]
 
 task :generate_host_config do |t, args|
-  target = ENV["LAYOUT"] || ENV["TEST_TARGET"]
+  target = ENV["LAYOUT"] || ENV["TEST_TARGET"] || 'centos7-64'
   generate = "beaker-hostgenerator"
   generate += " #{target}"
   generate += " > acceptance/hosts.cfg"
