@@ -141,6 +141,9 @@ Next start the yard server
 
 Finally navigate to http://0.0.0.0:8808/ to view the documentation
 
+## Contributing
+* [Contributing](CONTRIBUTING.md)
+
 ## abandon hope, all ye who enter here
 ### All permutations of v2 API (remove and refactor into useful doc sections below upon testing, merge-up to stable)
 
