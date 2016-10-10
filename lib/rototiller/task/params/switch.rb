@@ -4,15 +4,22 @@ require 'rototiller/task/block_handling'
 module Rototiller
   module Task
 
+    # The Switch class to implement rototiller command switch handling
+    #   via a RototillerTask's #add_command and Command's #add_switch
+    #   contains information about a Switch's state, as influenced by environment variables, for instance
+    # @since v1.0.0
+    # @attr [String] name The name of the switch to add to a command string
     class Switch < RototillerParam
       include BlockHandling
 
       # @return [String] the command to be used, could be considered a default
       attr_accessor :name
 
-      # Creates a new instance of Switch, holds information about desired state of a CLI switch
-      # @param [Hash] attribute_hash hashes of information about the command line switch
-      # @option attribute_hash [String] :name         The command line switch
+      # Creates a new instance of Switch
+      # @param [Hash,Array<Hash>] args hashes of information about the switch
+      # for block { |b| ... }
+      # @yield Switch object with attributes matching method calls supported by Switch
+      # @return Switch object
       def initialize(args={}, &block)
         # the env_vars that override the name
         @env_vars      = EnvCollection.new

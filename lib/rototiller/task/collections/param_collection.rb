@@ -3,17 +3,24 @@ require 'forwardable'
 module Rototiller
   module Task
 
+    # The base ParamCollection class to collect more than one parameter for a task, or other parameters
+    #   delegates to Array for most of Array's methods
+    # @since v0.1.0
     class ParamCollection
 
       extend Forwardable
 
       def_delegators :@collection, :clear, :delete_if, :include?, :include, :inspect, :each, :[], :map, :any?, :compact
 
-      # collect a given task's params
+      # setup the collection as a composed Array
+      # @return the collection
       def initialize
         @collection = []
       end
 
+      # push to the collection
+      # @param [Param] args instances of the child classes allowed_class
+      # @return the new collection
       def push(*args)
         check_classes(allowed_class, *args)
         @collection.push(*args)
