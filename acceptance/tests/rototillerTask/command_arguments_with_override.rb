@@ -3,6 +3,8 @@ require 'rakefile_tools'
 require 'test_utilities'
 
 test_name 'C97824: can set command arguments and overrides in a RototillerTask' do
+  pending_test 'this is borken, probably always has been'
+  #FIXME: when args and add_env are re-added
   extend Beaker::Hosts
   extend RakefileTools
   extend TestUtilities
