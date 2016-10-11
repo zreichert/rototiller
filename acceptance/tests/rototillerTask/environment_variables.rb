@@ -43,7 +43,7 @@ end
                        "The expected messaging was not observed for: '#{env[:name]}")
 
           # Use test command output to validate value of ENV used by task
-          task_out_match = env[:exists] ? /#{env[:name]}: present value/m :
+          task_out_match = env[:exists] ? /#{env[:name]}: env present value/m :
             /#{env[:name]}: notpresent default value/m
             assert_match(task_out_match, result.stdout,
                          "The printed env was different than expected for: '#{env[:name]}'")
