@@ -1,7 +1,8 @@
 module TestUtilities
 
   def random_string
-    [*('a'..'z'),*('0'..'9')].shuffle[0,6].join
+    # used in task names, don't put numbers in me
+    [*('a'..'z')].shuffle[0,8].join
   end
 
   def set_random_env_on(host)
@@ -32,6 +33,7 @@ module TestUtilities
     on(host, command, :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")
       assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
+      yield result if block_given?
       return result
     end
   end
