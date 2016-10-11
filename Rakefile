@@ -75,12 +75,12 @@ end
 task :yard => [:'docs:gen']
 
 namespace :docs do
-  DOCS_DIR = 'doc'
+  YARD_DIR = 'doc'
   desc 'Clear the generated documentation cache'
   task :clear do
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
-    sh "rm -rf #{DOCS_DIR}"
+    sh "rm -rf #{YARD_DIR}"
     Dir.chdir( original_dir )
   end
 
@@ -120,6 +120,7 @@ namespace :docs do
 
   desc 'Generate static class/module/method graph'
   task :class_graph do
+    DOCS_DIR = 'docs'
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
     graph_processor = 'dot'

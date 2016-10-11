@@ -6,14 +6,13 @@ A [Rake](https://github.com/ruby/rake) helper library for command-oriented tasks
 It is already known that the API will change quite a bit for the next release. These API changes are underway.
 Please see the notes at the top of the [Write](#write) section.
 
-* simplifies the building of command strings in :rototiller_task for task authors
-* abstracts the overriding of command string components: commands, flags, arguments for task users
-* unifies and standardizes messaging surrounding the use of environment variables for task operations
-* Provides a tool that can house shared rake task code for Puppet.
-* Reduce duplication in Rakefiles across projects at Puppet.
-* Reduce effort required to write first class rake tasks.
-* Reduce time and effort trying to understand requirement to run rake tasks.
-* Provide a standard interface for executing tests in a given test tier regardless of framework (Not MVP)
+## Rototiller Goals
+* Simplifies the building of command strings in :rototiller_task for task authors
+* Abstracts the overriding of command string components: commands, switches, options, arguments for task users
+* Unifies and standardizes messaging surrounding the use of environment variables for task operations
+* Reduce duplication in Rakefiles across projects
+* Reduce effort required to write first-class rake tasks
+* Reduce time and effort to understand how to run rake tasks
 
 <a name="install"></a>
 ## Install
@@ -21,7 +20,7 @@ Please see the notes at the top of the [Write](#write) section.
 
 <a name="write"></a>
 ## Write
-Rototiller provides a Rake DSL addition called 'rototiller_task' which is a fully featured Rake task with environment variable handling, messaging and command-string-building functionality.
+Rototiller provides a Rake DSL addition called '[rototiller_task](docs/rototiller_task_reference.md)' which is a fully featured Rake task with environment variable handling, messaging and command-string-building functionality.
 
 :warning: The API below will change for the next release.
 The known changes include (not comprehensive):
@@ -49,82 +48,49 @@ It's just like normal Rake. We just added a bunch of environment variable handli
     rake parent_task
         parent task for dependent tasks. this one also uses two environment variables and two commands
 
-### Examples
-    require 'rototiller'
+### The old way
 
-    desc "parent task for dependencies test. this one also uses an environment variable"
-    rototiller_task :parent_task do |task|
-      # most method initializers take either a hash, or block syntax (see next task)
-      task.add_env({:name     => 'RANDOM_VAR', :default => 'default value'})
-      task.add_env({:name     => 'RANDOM_VAR2', :default => 'default value2'})
-      task.add_command({:name => "echo 'i am testing everything with $RANDOM_VAR = #{ENV['RANDOM_VAR']}'"})
-      task.add_command({:name => "echo 'some other command!'"})
-    end
-
-produces:
-
-    # added environment variable defaults are set, implicitly, if not found
-    #   this way, their value can be used in the task
-    # FIXME... this is a bug?  i think it's supposed to set vars with default values even at task level??
-    $) rake parent_task
-    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
-    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
-    i am running this command with $RANDOM_VAR =
-    some other command!
-
-    $) rake parent_task RANDOM_VAR=redrum
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
-    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
-    i am running this command with $RANDOM_VAR = redrum
-    some other command!
-&nbsp;
-
-    desc "override a command-name with environment variable"
-    rototiller_task :child => :parent_task do |task|
-      task.add_command({:name => 'nonesuch', :add_env => {:name => 'COMMAND_EXE1'}})
-      # block syntax here. We give up some lines for more readability
-      task.add_command do |cmd|
-        cmd.name = 'meneither'
-        cmd.add_env({:name => 'COMMAND_EXE2'})
+    desc 'the old, bad way. This is for the README.md file.'
+      task :demo_old do |t|
+        echo_args = ENV['COMMAND_NAME'] || "my_sweet_command #{ENV['HOME']}"
+        overriding_options = ENV['OPTIONS'].to_s
+        args = [echo_args, *overriding_options.split(' '), '--switch'].compact
+        sh("echo", *args)
       end
-    end
 
-produces:
+this does, _mostly_ the same as below.  but what do the various environment variables do?  they aren't documented anywhere, especially in Rake's output. why do we have to split on a space for the overriding options?  why do we compact?  We shouldn't have to do this in all our Rakefiles, and then forget to do it, _correctly_ in most.  Rototiller does all this for us, but uniformly handling environment variables for any command piece, optionally. But anytime we do, we automatically get messaging in Rake's output, and this can be controlled with Rake's --verbose flag.  Now we don't have to dig into the Rakefile to see what the author intended for an interface.  Now we can provide a uniform interface for our various tasks based upon this library and have messaging come along for the ride.  Now we can remove the majority of repeated code from our Rakefiles.
 
-    # we didn't override the command with its env_var, so shell complains about nonsuch and exits
-    $ rake child RANDOM_VAR=redrum
-    INFO: The environment variable: 'RANDOM_VAR' was found with value: 'redrum':
-    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
-    i am running this command with $RANDOM_VAR = redrum
-    some other command!
-    sh: nonesuch: command not found
+### The rototiller way
 
-    # now we've overridden the first command to echo partial success
-    #  but the next command was not overridden by its environment variable, which has no default
-    $ rake child COMMAND_EXE1='echo partial success'
-    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
-    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
-    i am running this command with $RANDOM_VAR =
-    some other command!
-    partial success
-    sh: meneither: command not found
+    require 'rototiller'
+    desc 'the new, rototiller way. This is for the README.md file.'
+      rototiller_task :demo_new do |t|
+        t.add_env({:name => 'FOO', :message => 'I am describing FOO, my task needs me, but has a default. this default will be set in the environment unless it exists', :default => 'FOO default'})
+        t.add_env do |e|
+          e.name    = 'HOME'
+          e.message = 'I am describing HOME, my task needs me. all rototiller methods can take a hash or a block'
+        end
 
-    # NOW our silly example works!
-    $ rake child COMMAND_EXE1='echo partial success' COMMAND_EXE2='echo awwww yeah!'
-    INFO: The environment variable: 'RANDOM_VAR' is not set. Proceeding with default value: 'default value':
-    INFO: The environment variable: 'RANDOM_VAR2' is not set. Proceeding with default value: 'default value2':
-    i am running this command with $RANDOM_VAR =
-    some other command!
-    partial success
-    awwww yeah!
+        t.add_command do |c|
+          c.name = 'echo my_sweet_command ${HOME}'
+          c.add_env({:name => 'COMMAND_NAME', :message => 'use me to override this command name (`echo my_sweet_command`)'})
+          # anti-pattern: this is really an option.  FIXME once add_option is implemented
+          c.add_switch({:name => '--switch ${FOO}', :message => 'echo uses --switch to switch things'})
+          # FYI, add_switch can also take a block and add_env
+          # command blocks also have add_option, and add_arg, each of which can add environment variables which override themselves.
+          # add_option actually has its own add_arg and each of those have add_env.  so meta
+        end
+      end
 
-&nbsp;
-
+### Reference
+* [rototiller\_task reference](docs/rototiller_task_reference.md)
+  * contains usage information on all rototiller_task API methods
 
 ## Issues
 
-* none. it's perfect
+* none. it's perfect, but just in case (sorry, this is Puppet-internal for now)
 * [Jira: Rototiller](https://tickets.puppetlabs.com/issues/?jql=project%20%3D%20QA)
+* [Puppet QA-team](mailto:qa-team@puppet.com)
 
 ## More Documentation
 
