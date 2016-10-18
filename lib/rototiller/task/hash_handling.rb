@@ -6,6 +6,7 @@ module Rototiller
       # @param [Hash] hash attempt to use keys as setter or getter methods on self
       # @raise [ArgumentError] if a key is not a valid method on self
       def send_hash_keys_as_methods_to_self(hash)
+
         hash = [hash].flatten
         hash.each do |h|
           raise ArgumentError unless h.is_a?(Hash)

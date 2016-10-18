@@ -52,14 +52,12 @@ module Rototiller
             allow(ENV).to receive(:[]).with('BLAH').and_return(nil)
             option.add_env({:name => 'BLAH'})
             expect(option.name).to eq("#{@option_name}")
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with env_var' do
             # set env first, or option might not have it in time
             allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_option')
             option.add_env({:name => 'BLAH'})
             expect(option.name).to eq("my_shiny_new_option")
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var' do
             # set env first, or option might not have it in time
@@ -68,7 +66,6 @@ module Rototiller
             option.add_env({:name => 'ENV1'})
             option.add_env({:name => 'ENV2'})
             expect(option.name).to eq('right')
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var and one not set' do
             allow(ENV).to receive(:[]).with('ENV1').and_return('rite')
@@ -76,7 +73,6 @@ module Rototiller
             option.add_env({:name => 'ENV1'})
             option.add_env({:name => 'ENV2'})
             expect(option.name).to eq('rite')
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var and first not set' do
             allow(ENV).to receive(:[]).with('ENV1').and_return(nil)
@@ -84,7 +80,10 @@ module Rototiller
             option.add_env({:name => 'ENV1'})
             option.add_env({:name => 'ENV2'})
             expect(option.name).to eq('rite')
-            expect(option.argument.name).to eq(@argument_name)
+          end
+          it 'raises an error when supplied a bad key' do
+            bad_key = :foo
+            expect{ option.add_env({bad_key => 'bar'})}.to raise_error(ArgumentError)
           end
         end
         describe 'as block' do
@@ -93,14 +92,12 @@ module Rototiller
             allow(ENV).to receive(:[]).with('BLAH').and_return(nil)
             option.add_env { |e| e.name = 'BLAH' }
             expect(option.name).to eq(@option_name)
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with env_var' do
             # set env first, or option might not have it in time
             allow(ENV).to receive(:[]).with('BLAH').and_return('my_shiny_new_option')
             option.add_env { |e| e.name = 'BLAH' }
             expect(option.name).to eq('my_shiny_new_option')
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var' do
             # set env first, or option might not have it in time
@@ -109,7 +106,6 @@ module Rototiller
             option.add_env { |e| e.name = 'ENV1' }
             option.add_env { |e| e.name = 'ENV2' }
             expect(option.name).to eq('right')
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var and one not set' do
             allow(ENV).to receive(:[]).with('ENV1').and_return('rite')
@@ -117,7 +113,6 @@ module Rototiller
             option.add_env { |e| e.name = 'ENV1' }
             option.add_env { |e| e.name = 'ENV2' }
             expect(option.name).to eq('rite')
-            expect(option.argument.name).to eq(@argument_name)
           end
           it 'can override option name with multiple env_var and first not set' do
             allow(ENV).to receive(:[]).with('ENV1').and_return(nil)
@@ -125,7 +120,6 @@ module Rototiller
             option.add_env { |e| e.name = 'ENV1' }
             option.add_env { |e| e.name = 'ENV2' }
             expect(option.name).to eq('rite')
-            expect(option.argument.name).to eq(@argument_name)
           end
         end
       end

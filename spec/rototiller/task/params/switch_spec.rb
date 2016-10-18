@@ -77,6 +77,10 @@ module Rototiller
             switch.add_env({:name => 'ENV2'})
             expect(switch.name).to eq('rite')
           end
+          it 'raises an error when supplied a bad key' do
+            bad_key = :foo
+            expect{ switch.add_env({bad_key => 'bar'})}.to raise_error(ArgumentError)
+          end
         end
         describe 'as block' do
           it 'does not override switch name with empty env_var' do
