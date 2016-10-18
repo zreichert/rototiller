@@ -177,6 +177,10 @@ module Rototiller::Task
               .to output(/my_shiny_new_command:( command)? not found/)
               .to_stdout
           end
+          it 'raises an error when supplied a bad key' do
+            bad_key = :foo
+            expect{ task.add_command({:name => 'bar', :add_env => {bad_key => 'blabla'} } ) }.to raise_error(ArgumentError)
+          end
 
         end
       end

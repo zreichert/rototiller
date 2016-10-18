@@ -12,8 +12,8 @@ module Rototiller
 
       context '#to_s' do
         let(:collection) { described_class.new }
-        it 'is empty when collection empty' do
-          expect(collection.to_s).to eq ''
+        it 'is nil when collection empty' do
+          expect(collection.to_s).to eq nil
         end
         it 'is empty when collection members empty' do
           collection.push Switch.new({:name => ''})

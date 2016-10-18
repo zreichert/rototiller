@@ -17,6 +17,14 @@ module Rototiller
         super(args, &block)
       end
 
+      # adds argument to append to option.
+      #   In the Option context this Argument is added to an Option '--option argument'
+      # @param [Hash] args hashes of information about the environment variable
+      # @option args [String] :name The value to be used as teh argument
+      # @option args [String] :message A message describing the use of argument
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
       def add_argument(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
         if block_given?

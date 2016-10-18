@@ -49,4 +49,64 @@ module RakefileTools
     HEADER
   end
 
+  class RototillerBodyBuilder
+
+    def initialize(hash_representation)
+      @body = String.new
+      hash_representation.each do |k,v|
+        @body << add_method(k,v)
+      end
+      to_s
+    end
+
+    def add_method(method, value)
+
+      add_methods = ['add_command', 'add_option', 'add_env', 'add_argument', 'add_switch']
+      block = String.new
+
+      if add_methods.include?(method.to_s)
+        #can take a block
+        analyzed = analyze(value)
+        if analyzed.keep_as_hash
+          block << add_method_with_hash_signature(method, value)
+        else
+          block << "x.#{method} do |x|\n"
+          key_array = value.keys
+          key_array_length = key_array.length
+          key_array.each_with_index do |v, i|
+            block << add_method(v, value[v])
+            block << "end\n" if i == (key_array_length - 1)
+          end
+        end
+      else
+        block << set_param(method, value)
+      end
+
+      return block
+    end
+
+    def to_s
+      @body.to_s
+    end
+
+    def add_method_with_hash_signature(method, hash)
+      "x.#{method}(#{hash})\n"
+    end
+
+    def set_param(param, value)
+      "x.#{param} = '#{value}'\n"
+    end
+
+    # use as a call back to look inside nested hashes
+    AnalyzedHash = Struct.new(:keep_as_hash, :hash)
+
+    def analyze(hash)
+      if hash.keys.include?(:keep_as_hash)
+        hash.delete(:keep_as_hash)
+        AnalyzedHash.new(true, hash)
+      else
+        AnalyzedHash.new(false, hash)
+      end
+    end
+  end
 end

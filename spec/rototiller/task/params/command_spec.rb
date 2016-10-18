@@ -106,6 +106,10 @@ module Rototiller
             command.add_env({:name => 'ENV2'})
             expect(command.name).to eq('rite')
           end
+          it 'raises an error when supplied a bad key' do
+            bad_key = :foo
+            expect{ command.add_env({bad_key => 'bar'})}.to raise_error(ArgumentError)
+          end
         end
         describe 'as block' do
           it 'does not override command name with empty env_var' do
