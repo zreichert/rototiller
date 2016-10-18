@@ -13,7 +13,7 @@ end
 task :test => [:check_test]
 
 task :generate_host_config do |t, args|
-  target = ENV["LAYOUT"] || ENV["TEST_TARGET"]
+  target = ENV["LAYOUT"] || ENV["TEST_TARGET"] || 'centos7-64'
   generate = "beaker-hostgenerator"
   generate += " #{target}"
   generate += " > acceptance/hosts.cfg"
@@ -26,7 +26,6 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
   t.add_env({:name => 'LAYOUT',:default => 'centos7-64', :message => 'The argument to pass to beaker-hostgenerator, TEST_TARGET env preempts this variable', :set_env => true})
   t.add_env({:name => 'RAKE_VER',   :default => '11.0',       :message => 'The rake version to use when running acceptance tests', :set_env => true})
 
-  # with new block syntax
   #t.add_flag do |flag|
     #flag.name = '--log-level'
     #flag.default ="verbose"
@@ -76,20 +75,37 @@ end
 task :yard => [:'docs:gen']
 
 namespace :docs do
-  DOCS_DIR = 'yard_docs'
+  YARD_DIR = 'doc'
   desc 'Clear the generated documentation cache'
   task :clear do
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
-    sh "rm -rf #{DOCS_DIR}"
+    sh "rm -rf #{YARD_DIR}"
     Dir.chdir( original_dir )
   end
 
   desc 'Generate static documentation'
-  task :gen => 'docs:clear' do
+  task :gen do
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
-    output = `yard doc -o #{DOCS_DIR}`
+    output = `yard doc`
+    puts output
+    if output =~ /\[warn\]|\[error\]/
+      begin # prevent pointless stack on purposeful fail
+        fail "Errors/Warnings during yard documentation generation"
+      rescue Exception => e
+        puts 'Yardoc generation failed: ' + e.message
+        exit 1
+      end
+    end
+    Dir.chdir( original_dir )
+  end
+
+  desc 'Check amount of documentation'
+  task :check do
+    original_dir = Dir.pwd
+    Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
+    output = `yard stats --list-undoc`
     puts output
     if output =~ /\[warn\]|\[error\]/
       begin # prevent pointless stack on purposeful fail
@@ -104,8 +120,17 @@ namespace :docs do
 
   desc 'Generate static class/module/method graph'
   task :class_graph do
+    DOCS_DIR = 'docs'
+    original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
-    `yard graph --full | dot -Tpng -o #{DOCS_DIR}/rototiller_class_graph.png`
+    graph_processor = 'dot'
+    if exe_exists?(graph_processor)
+      Dir.mkdir(DOCS_DIR)
+      `yard graph --full | #{graph_processor} -Tpng -o #{DOCS_DIR}/rototiller_class_graph.png`
+      puts "we made you a class diagram: #{DOCS_DIR}/rototiller_class_graph.png"
+    else
+      puts 'ERROR: you don\'t have dot/graphviz; punting'
+    end
     Dir.chdir( original_dir )
   end
 end
@@ -113,4 +138,16 @@ end
 rototiller_task :check_test do |t|
   t.add_env({:name => 'SPEC_PATTERN', :default => 'spec/', :message => 'The pattern RSpec will use to find tests', :set_env => true})
   t.add_env({:name => 'RAKE_VER',     :default => '11.0',  :message => 'The rake version to use when running unit tests', :set_env => true})
+end
+
+# Cross-platform exe exists
+def exe_exists?(name)
+  exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+    exts.each { |ext|
+      exe = File.join(path, "#{name}#{ext}")
+      return true if File.executable?(exe) && !File.directory?(exe)
+    }
+  end
+  return false
 end

@@ -1,5 +1,6 @@
 require 'open3'
 require 'rototiller/task/collections/env_collection'
+require 'rototiller/task/collections/switch_collection'
 require 'rototiller/task/block_handling'
 
 module Rototiller
@@ -15,7 +16,6 @@ module Rototiller
     # @attr [String] argument_override_env The environment variable (if any) users can employ to override the above argument
     #    (this will change to Argument's #add_env in the next release)
     class Command < RototillerParam
-      include Rototiller::ColorText
       include BlockHandling
 
       # @return [String] the command to be used, could be considered a default
@@ -38,20 +38,24 @@ module Rototiller
       def initialize(args={}, &block)
         # the env_vars that override the command name
         @env_vars      = EnvCollection.new
+        @switches      = SwitchCollection.new
 
         if block_given?
-          allowed_attributes = [:name, :add_env, :argument, :argument_override_env]
+          allowed_attributes = [:name, :add_env, :add_switch, :argument, :argument_override_env]
           attribute_hash = pull_params_from_block(allowed_attributes, &block)
           yield self
         else
           attribute_hash = args
         end
 
-        #hmmmm... maybe we really should convert to block and then yield on self?
-        # on the otherhand, there shouldn't be many of these and we can just loop over allowed_attributes
         @name = @env_vars.last || attribute_hash[:name]
+
         if attribute_hash[:add_env]
           add_env(attribute_hash[:add_env])
+        end
+
+        if attribute_hash[:add_switch]
+          add_switch(attribute_hash[:add_switch])
         end
 
         # check if an argument_override_env is provided
@@ -79,16 +83,35 @@ module Rototiller
         #   have to do it this way so EnvVar doesn't become a collection
         #   but if this gets moved to a mixin, it might be more tolerable
         if block_given?
-          @env_vars.push(EnvVar.new(&block))
+          new_env_var = EnvVar.new(&block)
+          @env_vars.push(new_env_var)
         else
           #TODO: test this with array and non-array single hash
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @env_vars.push(EnvVar.new(arg))
+            new_env_var = EnvVar.new(arg)
+            @env_vars.push(new_env_var)
           end
         end
         @name = @env_vars.last if @env_vars.last
+      end
+
+      def add_switch(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
+        # this is kinda annoying we have to do this for all params? (not DRY)
+        #   have to do it this way so EnvVar doesn't become a collection
+        #   but if this gets moved to a mixin, it might be more tolerable
+        if block_given?
+          @switches.push(Switch.new(&block))
+        else
+          #TODO: test this with array and non-array single hash
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @switches.push(Switch.new(arg))
+          end
+        end
       end
 
       # convert a Command object to a string (runable command string)
@@ -96,7 +119,7 @@ module Rototiller
       def to_str
         delete_nil_empty_false([
           (name if name),
-          @flags.to_s,
+          @switches.to_s,
           (argument if argument)
         ]).join(' ').to_s
       end

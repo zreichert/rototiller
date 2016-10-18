@@ -18,7 +18,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
     rakefile_contents = <<-EOS
       #{rototiller_rakefile_header}
       Rototiller::Task::RototillerTask.define_task :#{@task_name} do |t|
-          t.add_command({:name => 'echo success', :add_env => {:name => '#{override_env}'}})
+          t.add_command({:name => 'echo fail', :add_env => {:name => '#{override_env}'}})
       end
     EOS
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
@@ -26,7 +26,7 @@ test_name 'C97827: can set envvar to override command name when using task.comma
 
     execute_task_on(sut, @task_name, rakefile_path) do |result|
       # command was used that was supplied by the override_env
-      assert_match(/^success/, result.stdout, 'The correct command was not observed')
+      assert_match(validation_string, result.stdout, 'The correct command was not observed')
     end
   end
 
