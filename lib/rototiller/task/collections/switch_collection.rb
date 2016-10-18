@@ -19,11 +19,11 @@ module Rototiller
       #   the value sent by author, or overridden by any EnvVar
       # @return [String] the Switch's value
       def to_str
-        @collection.join(' ').to_s
+        @collection.join(' ') unless @collection.empty?
       end
+
       alias :to_s :to_str
 
     end
-
   end
 end

@@ -69,7 +69,10 @@ rototiller_task :acceptance => [:generate_host_config] do |t|
     #flag.override_env = 'BEAKER_TESTS'
   #end
 
-  t.add_command({:name => 'beaker --log-level verbose --hosts acceptance/hosts.cfg --preserve-hosts --keyfile ~/.ssh/id_rsa-acceptance --load-path acceptance/lib/ --pre-suite acceptance/pre-suite --tests acceptance/tests/', :override_env => 'BEAKER_EXECUTABLE'})
+  t.add_command do |cmd|
+    cmd.name = 'beaker --log-level verbose --hosts acceptance/hosts.cfg --preserve-hosts --keyfile ~/.ssh/id_rsa-acceptance --load-path acceptance/lib/ --pre-suite acceptance/pre-suite --tests acceptance/tests/'
+    cmd.add_env(:name => 'BEAKER_EXECUTABLE')
+  end
 end
 
 task :yard => [:'docs:gen']
