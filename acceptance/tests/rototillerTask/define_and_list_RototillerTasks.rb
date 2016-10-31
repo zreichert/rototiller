@@ -43,7 +43,7 @@ EOS
 
   tasks.each do |task|
     step "Use the -T rake switch to test task '#{task[:task_name]}' description" do
-      on(sut, "rake -T --rakefile #{rakefile_path}", :accept_all_exit_codes => true) do |result|
+      on(sut, "bundle exec rake -T --rakefile #{rakefile_path}", :accept_all_exit_codes => true) do |result|
         assert(result.exit_code == 0, 'The expected exit code 0 was not observed')
         assert_no_match(/error/i, result.output, 'An unexpected error was observed')
         if task[:description]

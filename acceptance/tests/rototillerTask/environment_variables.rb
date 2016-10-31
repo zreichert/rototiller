@@ -69,7 +69,7 @@ end
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
 
     step 'Execute task defined in rake task' do
-      on(sut, "rake #{@task_name} --rakefile #{rakefile_path}", :accept_all_exit_codes => true) do |result|
+      on(sut, "bundle exec rake #{@task_name} --rakefile #{rakefile_path}", :accept_all_exit_codes => true) do |result|
         # exit code & no error in output
         assert(result.exit_code == 1, 'The expected exit code 1 was not observed')
 
