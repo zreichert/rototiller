@@ -14,6 +14,7 @@ module Rototiller
       def allowed_class
         Option
       end
+
     end
   end
 end

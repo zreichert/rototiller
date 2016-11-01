@@ -2,6 +2,7 @@ require 'open3'
 require 'rototiller/task/collections/env_collection'
 require 'rototiller/task/collections/switch_collection'
 require 'rototiller/task/collections/option_collection'
+require 'rototiller/task/collections/argument_collection'
 
 module Rototiller
   module Task
@@ -12,9 +13,6 @@ module Rototiller
     # @attr [String] name The name of the command to run
     # @attr_reader [Struct] result A structured command result
     #    contains members: output, exit_code and pid (from Open3.popen2e)
-    # @attr [String] argument Command argument (this will change to add_argument in the next release)
-    # @attr [String] argument_override_env The environment variable (if any) users can employ to override the above argument
-    #    (this will change to Argument's #add_env in the next release)
     class Command < RototillerParam
 
       # @return [String] the command to be used, could be considered a default
@@ -22,12 +20,6 @@ module Rototiller
 
       # @return [Struct] the command results, if run
       attr_reader :result
-
-      # @return [String, nil] the value that should be used as an argument to the given command
-      attr_accessor :argument
-
-      # @return [EnvVar] the ENV that is equal to the argument to be used with this command
-      attr_accessor :argument_override_env
 
       # Creates a new instance of Command, holds information about desired state of a command
       # @param [Hash,Array<Hash>] args hashes of information about the command
@@ -39,6 +31,7 @@ module Rototiller
         @env_vars      = EnvCollection.new
         @switches      = SwitchCollection.new
         @options       = OptionCollection.new
+        @arguments     = ArgumentCollection.new
 
         block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
 
@@ -109,6 +102,27 @@ module Rototiller
         end
       end
 
+      # adds argument to append to command.
+      #   In the Command context this Argument is added to the end of the command string
+      # @param [Hash] args hashes of information about the argument
+      # @option args [String] :name The value to be used as the argument
+      # @option args [String] :message A message describing the use of argument
+      #
+      # for block {|a| ... }
+      # @yield [a] Optional block syntax allows you to specify information about the option, available methods match hash keys
+      def add_argument(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
+        if block_given?
+          @arguments.push(Argument.new(&block))
+        else
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @arguments.push(Argument.new(arg))
+          end
+        end
+      end
+
       # TODO make private method? so that it will throw an error if yielded to?
       # convert a Command object to a string (runable command string)
       # @return [String]
@@ -117,7 +131,7 @@ module Rototiller
           (name if name),
           @switches.to_s,
           @options.to_s,
-          (argument if argument)
+          @arguments.to_s
         ]).join(' ').to_s
       end
       alias :to_s :to_str
