@@ -3,54 +3,145 @@ require 'rakefile_tools'
 require 'test_utilities'
 
 test_name 'C97824: can set command arguments and overrides in a RototillerTask' do
-  pending_test 'this is borken, probably always has been'
-  #FIXME: when args and add_env are re-added
   extend Beaker::Hosts
   extend RakefileTools
   extend TestUtilities
 
-  step 'Test command argument with an override_env that has a value' do
-    argument_override_env = unique_env_on(sut)
-    argument_env_value = 'THIS_WAS_THE_ARG_IN_THE_ENV'
-    default_arg = 'HANKVENTURE'
-    task_name    = 'command_with_args_and_defaults'
+  #FIXME: this is almost verbatim command_switches.rb.  abstract me
+  test_filename = File.basename(__FILE__, '.*')
+  rakefile_contents = ''
 
-    rakefile_contents = <<-EOS
-#{rototiller_rakefile_header}
-rototiller_task :#{task_name} do |t|
-    t.add_command({:name => 'echo', :argument => '#{default_arg}', :argument_override_env => '#{argument_override_env}'})
-end
+  tasks = []
+  step 'add_argument does its thing' do
+    task_name    = test_filename + "#{tasks.length}"
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+          t.add_command({:name => 'echo', :add_argument => {:name => '#{task_name}'}})
+      end
     EOS
+    tasks << task_name
+  end
 
+  step 'add_env does not override when missing' do
+    task_name    = test_filename + "#{tasks.length}"
+    override_env = test_filename.upcase + random_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+          t.add_command({:name => 'echo', :add_argument => {:name => '#{task_name}', :add_env => {:name => '#{override_env}'}}})
+      end
+    EOS
+    tasks << task_name
+  end
+
+  step 'add_env with value as hash in command hash' do
+    override_env = test_filename.upcase + random_string
+    validation_string = random_string
+    task_name    = validation_string
+    env_value = validation_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+          t.add_command({:name => 'echo', :add_argument => {:name => '#{task_name}', :add_env => {:name => '#{override_env}'}}})
+      end
+    EOS
+    tasks << task_name
+    sut.add_env_var(override_env, env_value)
+  end
+
+  step 'add_env with value as blocks on blocks on blocks' do
+    override_env = test_filename.upcase + random_string
+    validation_string = random_string
+    task_name    = validation_string
+    env_value = validation_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+        t.add_command do |c|
+          c.name = 'echo'
+          c.add_argument do |s|
+            s.name = 'fail'
+            s.add_env do |e|
+              e.name = '#{override_env}'
+            end
+          end
+        end
+      end
+    EOS
+    tasks << task_name
+    sut.add_env_var(override_env, env_value)
+  end
+
+  step 'add_env with value as hash in hash in block' do
+    override_env = test_filename.upcase + random_string
+    validation_string = random_string
+    task_name    = validation_string
+    env_value = validation_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+          t.add_command do |c|
+            c.name = 'echo'
+            c.add_argument({:name => 'fail', :add_env => {:name => '#{override_env}'}})
+          end
+      end
+    EOS
+    tasks << task_name
+    sut.add_env_var(override_env, env_value)
+  end
+
+  step 'add_env with value as hash in block in block' do
+    override_env = test_filename.upcase + random_string
+    validation_string = random_string
+    task_name    = validation_string
+    env_value = validation_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+        t.add_command do |c|
+          c.name = 'echo'
+          c.add_argument do |s|
+            s.name = 'fail'
+            s.add_env({:name => '#{override_env}'})
+          end
+        end
+      end
+    EOS
+    tasks << task_name
+    sut.add_env_var(override_env, env_value)
+  end
+
+  step 'add_argument multiples as both hash and block' do
+    #FIXME: this one can't check for the second switch with the assertions below
+    validation_string  = random_string
+    validation_string2 = random_string
+    task_name    = validation_string
+
+    rakefile_contents << <<-EOS
+      rototiller_task :#{task_name} do |t|
+          t.add_command do |c|
+            c.name = 'echo'
+            c.add_argument({:name => '#{validation_string}'})
+            c.add_argument do |s|
+              s.name = '#{validation_string2}'
+            end
+          end
+      end
+    EOS
+    tasks << task_name
+  end
+
+
+  step 'create Rakefile, execute tasks' do
     rakefile_path = create_rakefile_on(sut, rakefile_contents)
-    sut.add_env_var(argument_override_env, argument_env_value)
 
-    execute_task_on(sut, task_name, rakefile_path) do |result|
-      assert_match(/^#{argument_env_value}/, result.stdout, 'The correct command was not observed')
+    tasks.each do |task|
+      execute_task_on(sut, task, rakefile_path) do |result|
+        assert_match(/^#{task}/, result.stdout, "The correct switch was not observed (#{task})")
+      end
     end
   end
 
-  step 'Add Command argument with block syntax and unset override_env' do
-    argument_override_env2 = unique_env_on(sut)
-    argument_env_value2 = "ENV_VALUE#{random_string}"
-    default_arg2        = 'HANKVENTURE'
-    task_name2          = 'command_with_args_and_defaults2'
 
-    rakefile_contents = <<-EOS
-#{rototiller_rakefile_header}
-rototiller_task :#{task_name2} do |t|
-    t.add_command do |c|
-      c.name = 'echo'
-      c.argument = '#{default_arg2}'
-      c.argument_override_env = '#{argument_override_env2}'
-    end
-end
-    EOS
-    rakefile_path = create_rakefile_on(sut, rakefile_contents)
-
-    execute_task_on(sut, task_name2, rakefile_path) do |result|
-      command_regex = /^#{argument_env_value2}/
-      assert_match(command_regex, result.stdout, 'The correct command was not observed')
-    end
-  end
 end

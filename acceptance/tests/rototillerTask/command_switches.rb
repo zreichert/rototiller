@@ -12,7 +12,7 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
 
   tasks = []
   step 'add_switch does its thing' do
-    task_name    = test_filename + '1'
+    task_name    = test_filename + "#{tasks.length}"
 
     rakefile_contents << <<-EOS
       rototiller_task :#{task_name} do |t|
@@ -23,7 +23,7 @@ test_name 'C97821: can set switches (boolean options) for commands in a Rototill
   end
 
   step 'add_env does not override when missing' do
-    task_name    = test_filename + '2'
+    task_name    = test_filename + "#{tasks.length}"
     override_env = test_filename.upcase + random_string
 
     rakefile_contents << <<-EOS

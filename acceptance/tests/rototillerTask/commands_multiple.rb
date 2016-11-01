@@ -13,8 +13,8 @@ test_name 'can add multiple commands in a RototillerTask' do
     rakefile_contents = <<-EOS
     #{rototiller_rakefile_header}
 rototiller_task :#{@task_name} do |t|
-    t.add_command({:name => 'echo', :argument => 'command1'})
-    t.add_command({:name => 'echo', :argument => 'command2'})
+    t.add_command({:name => 'echo', :add_argument => {:name => 'command1'}})
+    t.add_command({:name => 'echo', :add_argument => {:name => 'command2'}})
 end
     EOS
 
@@ -29,8 +29,8 @@ end
     rakefile_contents = <<-EOS
     #{rototiller_rakefile_header}
 rototiller_task :#{@task_name} do |t|
-    t.add_command { |c| c.name = 'echo'; c.argument = 'command1'}
-    t.add_command { |c| c.name = 'echo'; c.argument = 'command2'}
+    t.add_command { |c| c.name = 'echo'; c.add_argument({:name => 'command1'})}
+    t.add_command { |c| c.name = 'echo'; c.add_argument({:name => 'command2'})}
 end
     EOS
 
@@ -45,8 +45,8 @@ end
     rakefile_contents = <<-EOS
     #{rototiller_rakefile_header}
 rototiller_task :#{@task_name} do |t|
-    t.add_command({:name => 'echo', :argument => 'command1'})
-    t.add_command { |c| c.name = 'echo'; c.argument = 'command2'}
+    t.add_command({:name => 'echo', :add_argument => {:name => 'command1'}})
+    t.add_command { |c| c.name = 'echo'; c.add_argument({:name => 'command2'})}
 end
     EOS
 
