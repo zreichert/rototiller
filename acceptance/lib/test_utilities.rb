@@ -28,7 +28,7 @@ module TestUtilities
 
   def execute_task_on(host, task_name=nil, rakefile_path=nil)
     step "Execute task '#{task_name}', ensure success"
-    command = "rake #{task_name}"
+    command = "bundle exec rake #{task_name}"
     command = command + " --rakefile #{rakefile_path}" if rakefile_path
     on(host, command, :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")

@@ -7,7 +7,7 @@ require 'rototiller/version'
 Gem::Specification.new do |s|
   s.name          = 'rototiller'
   s.authors       = ["Puppet Labs", 'Zach Reichert', 'Eric Thompson']
-  s.email         = ["qa@puppetlabs.com"]
+  s.email         = ["qa@puppet.com"]
   s.summary       = 'Puppet Labs rake tool'
   s.description   = 'Puppet Labs tool for building rake tasks'
   s.homepage      = "https://github.com/puppetlabs/rototiller"
