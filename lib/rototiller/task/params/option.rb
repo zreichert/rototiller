@@ -1,5 +1,4 @@
 require 'rototiller/task/collections/env_collection'
-require 'rototiller/task/params/argument'
 require 'rototiller/task/collections/argument_collection'
 
 module Rototiller
@@ -19,21 +18,21 @@ module Rototiller
 
       # adds argument to append to option.
       #   In the Option context this Argument is added to an Option '--option argument'
-      # @param [Hash] args hashes of information about the environment variable
-      # @option args [String] :name The value to be used as teh argument
+      # @param [Hash] args hashes of information about the argument
+      # @option args [String] :name The value to be used as the argument
       # @option args [String] :message A message describing the use of argument
       #
       # for block {|a| ... }
-      # @yield [a] Optional block syntax allows you to specify information about the environment variable, available methods match hash keys
+      # @yield [a] Optional block syntax allows you to specify information about the argument, available methods match hash keys
       def add_argument(*args, &block)
         raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
         if block_given?
-          @arguments.push(Rototiller::Task::Argument.new(&block))
+          @arguments.push(Argument.new(&block))
         else
           args.each do |arg| # we can accept an array of hashes, each of which defines a param
             error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
             raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
-            @arguments.push(Rototiller::Task::Argument.new(arg))
+            @arguments.push(Argument.new(arg))
           end
         end
       end
