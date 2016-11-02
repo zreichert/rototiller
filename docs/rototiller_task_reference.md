@@ -16,6 +16,9 @@
 ### #add_command
 * adds a command to a rototiller_task. This command can in turn contain environment variables, switches, options and arguments
 * this command (and any others) will be run with the task is executed
+* (!) currently a task will fail if its command fails _only_ if `#fail_on_error` is set
+  * the error message from the command will only be shown when rake is run with `--verbose`
+  * this will be fixed post-1.0
 
 <a name="rototiller_task:add_env"></a>
 ### #add_env
