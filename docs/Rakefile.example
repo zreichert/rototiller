@@ -22,9 +22,8 @@
         t.add_command do |c|
           c.name = 'echo my_sweet_command ${HOME}'
           c.add_env({:name => 'COMMAND_NAME', :message => 'use me to override this command name (`echo my_sweet_command`)'})
-          # anti-pattern: this is really an option.  FIXME once add_option is implemented
-          c.add_switch({:name => '--switch ${FOO}', :message => 'echo uses --switch to switch things'})
-          # FYI, add_switch can also take a block and add_env
+          c.add_switch({:name => '--switch', :message => 'echo uses --switch to switch things'})
+          # FYI, add_switch can also take a block and/or add_env
           # command blocks also have add_option, and add_arg, each of which can add environment variables which override themselves.
           # add_option actually has its own add_arg and each of those have add_env.  so meta
         end
@@ -53,7 +52,7 @@
     end
 
 
-    desc "override a command-switch with environment variable"
+    desc "add command-switch or option or argument with overriding environment variables"
     rototiller_task :variable_switch do |task|
       task.add_command do |cmd|
         cmd.name = 'echo command_name'
@@ -61,13 +60,17 @@
           s.name = '--switch'
           s.add_env({:name => 'CRASH_OVERRIDE'})
         end
+        cmd.add_argument do |a|
+          a.name = 'arguments go last'
+          a.add_env({:name => 'ARG_OVERRIDE'})
+        end
         cmd.add_option do |o|
           o.name = '--option'
           o.add_env({:name => 'OPT_OVERRIDE'})
           o.add_argument do |arg|
             arg.name = 'argument'
-            arg.add_env(:name => 'ARG_OVERRIDE', :message => 'message at the env for argument', :foo => 'this should fail')
-            arg.message = 'This is the message at the argument level'
+            arg.add_env({:name => 'ARG_OVERRIDE', :message => 'message at the env for argument'})
+            arg.message = 'This is the message at the option argument level'
           end
         end
       end
