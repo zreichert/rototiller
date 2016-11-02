@@ -1,5 +1,5 @@
 module Rototiller
   module Version
-    STRING = '0.1.0'
+    STRING = '0.99.0'
   end
 end

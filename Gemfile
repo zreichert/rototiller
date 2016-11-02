@@ -3,6 +3,9 @@ source 'https://rubygems.org'
 # place all development, system_test, etc dependencies here
 
 # in the Rakefile, so we require it in all groups
+rake_version = ENV['RAKE_VER'] || '11.0'
+gem 'rake'                 , "~> #{rake_version}"
+gem 'rototiller'           ,'~> 0.1.0'
 gem 'rspec'                ,'~> 3.4.0'
 
 group :system_tests do
@@ -31,6 +34,3 @@ user_gemfile = File.join(Dir.home,'.Gemfile')
 if File.exists? user_gemfile
   eval(File.read(user_gemfile), binding)
 end
-
-# Specify your gem's dependencies in rototiller.gemspec
-gemspec
