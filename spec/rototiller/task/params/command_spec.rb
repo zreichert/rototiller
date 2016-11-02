@@ -25,8 +25,9 @@ module Rototiller
 
         @arg_name      = "VARNAME_#{(0...8).map { (65 + rand(26)).chr }.join}"
         @command_name  = 'echo'
-        @args = {:name => @command_name, :argument => @arg_name}
-        @block = Proc.new { |b| b.name = @command_name; b.argument = @arg_name }
+        #FIXME: refactor these so we better do blocks vs hashes
+        @args = {:name => @command_name, :add_argument => {:name => @arg_name}}
+        @block = Proc.new { |b| b.name = @command_name; b.add_argument({:name => @arg_name}) }
       end
 
       describe '#name' do

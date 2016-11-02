@@ -105,30 +105,54 @@ produces:
 
 <a name="Command:add_switch"></a>
 ### #add_switch
+<a name="Command:add_argument"></a>
+### #add_argument
 * adds an arbitrary string to a command
   * intended to add `--switch` type binary switches that do not take arguments (see [add_option](#Command:add_option))
+  * add_argument is intended to add strings to the end of the command string (options and switches are added prior to arguments
 
 &nbsp;
 
-    desc "override a command-switch with environment variable"
+    desc "add command-switch or option or argument with overriding environment variables"
     rototiller_task :variable_switch do |task|
       task.add_command do |cmd|
-        cmd.name = 'echo'
+        cmd.name = 'echo command_name'
         cmd.add_switch do |s|
-         s.name = '--switch'
-         s.add_env({:name => 'CRASH_OVERRIDE'})
+          s.name = '--switch'
+          s.add_env({:name => 'CRASH_OVERRIDE'})
+        end
+        cmd.add_argument do |a|
+          a.name = 'arguments go last'
+          a.add_env({:name => 'ARG_OVERRIDE2'})
+        end
+        cmd.add_option do |o|
+          o.name = '--option'
+          o.add_env({:name => 'OPT_OVERRIDE'})
+          o.add_argument do |arg|
+            arg.name = 'argument'
+            arg.add_env({:name => 'ARG_OVERRIDE', :message => 'message at the env for argument'})
+            arg.message = 'This is the message at the option argument level'
+          end
+        end
       end
     end
 
 produces:
 
-    $ rake --rakefile docs/Rakefile.example variable_switch
-    --switch
+    $ rake -f docs/Rakefile.example variable_switch
+    command_name --switch --option argument arguments go last
 
     $ rake --rakefile docs/Rakefile.example variable_switch --verbose
-    echo --switch
-    --switch
+    echo command_name --switch --option argument arguments go last
+    command_name --switch --option argument arguments go last
 
-    $ rake --rakefile docs/Rakefile.example variable_switch --verbose CRASH_OVERRIDE='and burn'
-    echo and burn
-    and burn
+    $ rake --rakefile docs/Rakefile.example variable_switch CRASH_OVERRIDE='and burn'
+    command_name and burn --option argument arguments go last
+
+    $ rake --rakefile docs/Rakefile.example variable_switch OPT_OVERRIDE='--real_option'
+    command_name --switch --real_option argument arguments go last
+
+    $ rake --rakefile docs/Rakefile.example variable_switch ARG_OVERRIDE='opt arg'
+    command_name --switch --option opt arg arguments go last
+
+    # what do you think ARG_OVERRIDE2 does?
