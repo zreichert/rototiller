@@ -1,5 +1,6 @@
 require "bundler/gem_tasks"
 require 'rspec/core/rake_task'
+require 'fileutils'
 require 'rototiller'
 
 task :default => :test
@@ -122,15 +123,16 @@ namespace :docs do
   end
 
   desc 'Generate static class/module/method graph'
-  task :class_graph do
+  task :class_graph => [:gen] do
     DOCS_DIR = 'docs'
     original_dir = Dir.pwd
     Dir.chdir( File.expand_path(File.dirname(__FILE__)) )
     graph_processor = 'dot'
     if exe_exists?(graph_processor)
-      Dir.mkdir(DOCS_DIR)
-      `yard graph --full | #{graph_processor} -Tpng -o #{DOCS_DIR}/rototiller_class_graph.png`
-      puts "we made you a class diagram: #{DOCS_DIR}/rototiller_class_graph.png"
+      FileUtils.mkdir_p(DOCS_DIR)
+      if system("yard graph --full | #{graph_processor} -Tpng -o #{DOCS_DIR}/rototiller_class_graph.png")
+        puts "we made you a class diagram: #{DOCS_DIR}/rototiller_class_graph.png"
+      end
     else
       puts 'ERROR: you don\'t have dot/graphviz; punting'
     end
