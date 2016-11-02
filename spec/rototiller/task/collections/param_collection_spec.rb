@@ -59,7 +59,8 @@ module Rototiller
         it 'should work with one filter' do
           param_collection.push(*vars)
 
-          [unset_env_1_no_default, unset_env_2_no_default].each do |var|
+          #[unset_env_1_no_default,
+          [unset_env_2_no_default].each do |var|
             expected_message = /31mERROR: #{env_message_header} '#{var.name}' is required: description/
             expect(param_collection.format_messages({:stop => true})).to match(expected_message)
           end

@@ -1,7 +1,7 @@
 require 'open3'
 require 'rototiller/task/collections/env_collection'
 require 'rototiller/task/collections/switch_collection'
-require 'rototiller/task/block_handling'
+require 'rototiller/task/collections/option_collection'
 
 module Rototiller
   module Task
@@ -16,7 +16,6 @@ module Rototiller
     # @attr [String] argument_override_env The environment variable (if any) users can employ to override the above argument
     #    (this will change to Argument's #add_env in the next release)
     class Command < RototillerParam
-      include BlockHandling
 
       # @return [String] the command to be used, could be considered a default
       attr_accessor :name
@@ -39,33 +38,12 @@ module Rototiller
         # the env_vars that override the command name
         @env_vars      = EnvCollection.new
         @switches      = SwitchCollection.new
+        @options       = OptionCollection.new
 
-        if block_given?
-          allowed_attributes = [:name, :add_env, :add_switch, :argument, :argument_override_env]
-          attribute_hash = pull_params_from_block(allowed_attributes, &block)
-          yield self
-        else
-          attribute_hash = args
-        end
+        block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
 
-        @name = @env_vars.last || attribute_hash[:name]
-
-        if attribute_hash[:add_env]
-          add_env(attribute_hash[:add_env])
-        end
-
-        if attribute_hash[:add_switch]
-          add_switch(attribute_hash[:add_switch])
-        end
-
-        # check if an argument_override_env is provided
-        if attribute_hash[:argument_override_env]
-          @argument_override_env = EnvVar.new({:name => attribute_hash[:argument_override_env], :default => attribute_hash[:argument]})
-          @argument = @argument_override_env.value
-        else
-          @argument = attribute_hash[:argument]
-        end
-
+        #TODO fix logic for name / ENV
+        @name ||= @env_vars.last
       end
 
       # adds environment variables to be tracked, messaged.
@@ -114,12 +92,31 @@ module Rototiller
         end
       end
 
+      def add_option(*args, &block)
+        raise ArgumentError.new("#{__method__} takes a block or a hash") if !args.empty? && block_given?
+        # this is kinda annoying we have to do this for all params? (not DRY)
+        #   have to do it this way so EnvVar doesn't become a collection
+        #   but if this gets moved to a mixin, it might be more tolerable
+        if block_given?
+          @options.push(Option.new(&block))
+        else
+          #TODO: test this with array and non-array single hash
+          args.each do |arg| # we can accept an array of hashes, each of which defines a param
+            error_string = "#{__method__} takes an Array of Hashes. Received Array of: '#{arg.class}'"
+            raise ArgumentError.new(error_string) unless arg.is_a?(Hash)
+            @options.push(Option.new(arg))
+          end
+        end
+      end
+
+      # TODO make private method? so that it will throw an error if yielded to?
       # convert a Command object to a string (runable command string)
       # @return [String]
       def to_str
         delete_nil_empty_false([
           (name if name),
           @switches.to_s,
+          @options.to_s,
           (argument if argument)
         ]).join(' ').to_s
       end

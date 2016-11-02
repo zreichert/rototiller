@@ -1,6 +1,5 @@
 require 'rototiller/task/params'
 require 'rototiller/utilities/color_text'
-require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
@@ -20,15 +19,16 @@ module Rototiller
     class EnvVar < RototillerParam
       MESSAGE_TYPES = {:nodefault_noexist=>0, :exist=>1, :default_noexist=>2, :not_required=>3}
       include Rototiller::ColorText
-      include BlockHandling
 
       attr_accessor :name
       attr_accessor :default
-      attr_reader :required
+      attr_accessor :required
       # FIXME: does (api) user need to read this directly?
       attr_reader :message_level
       attr_reader :stop
       attr_reader :value
+      attr_accessor :message
+      attr_accessor :set_env
 
       # Creates a new instance of EnvVar, holds information about the ENV in the environment
       # @param [Hash, Array<Hash>] args hash of information about the environment variable
@@ -40,22 +40,13 @@ module Rototiller
       # @yield EnvVar object with attributes matching method calls supported by EnvVar
       # @return EnvVar object
       def initialize(args={}, &block)
-        if block_given?
-          required_attributes = [:name, :default, :message, :required, :set_env] # maybe should be a CONST
-          attribute_hash = pull_params_from_block(required_attributes, &block)
-          yield self
-        else
-          attribute_hash = args
-        end
+        block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
 
-        raise(ArgumentError, 'A name must be supplied to add_env') unless attribute_hash[:name]
-        @name = attribute_hash[:name]
-        @user_message = attribute_hash[:message]
-        @default = attribute_hash[:default]
-        @set_env = attribute_hash[:set_env] || false
+        raise(ArgumentError, 'A name must be supplied to add_env') unless @name
         # FIXME: create env_var truthy helper
-        attribute_hash[:required].is_a?(String) ? attribute_hash[:required] = (attribute_hash[:required].downcase == 'true') : attribute_hash[:required]
-        @required = ( !!attribute_hash[:required] == attribute_hash[:required] ? attribute_hash[:required] : true)
+        # WTF does this do????
+        @required.is_a?(String) ? @required = (@required.downcase == 'true') : @required
+        @required = ( !!@required == @required ? @required : true)
 
         reset
       end
@@ -116,18 +107,29 @@ module Rototiller
         reset
       end
 
+      def set_env=(set=true)
+        @set_env = set
+      end
+
       private
 
       # @private
+      #TODO cleanup WTF
       def reset
-        @value = ENV[@name] || @default
-        ENV[@name] = @value if @set_env
-        set_message_level
+        if @name
+          @value = ENV[@name] || @default
+          ENV[@name] = @value if @set_env
+          set_message_level
+        else
+          @value = @default
+          set_message_level
+        end
       end
 
       # @private
       def check
-        ENV.key?(@name)
+        # its possible that name could not be set
+        ENV.key?(@name) if @name
       end
 
       # @private

@@ -1,5 +1,4 @@
 require 'rototiller/task/collections/env_collection'
-require 'rototiller/task/block_handling'
 
 module Rototiller
   module Task
@@ -10,10 +9,9 @@ module Rototiller
     # @since v1.0.0
     # @attr [String] name The name of the switch to add to a command string
     class Switch < RototillerParam
-      include BlockHandling
 
       # @return [String] the command to be used, could be considered a default
-      attr_accessor :name
+      attr_accessor :name, :message
 
       # Creates a new instance of Switch
       # @param [Hash,Array<Hash>] args hashes of information about the switch
@@ -23,19 +21,8 @@ module Rototiller
       def initialize(args={}, &block)
         # the env_vars that override the name
         @env_vars      = EnvCollection.new
-
-        if block_given?
-          allowed_attributes = [:name, :add_env]
-          attribute_hash = pull_params_from_block(allowed_attributes, &block)
-          yield self
-        else
-          attribute_hash = args
-        end
-
-        @name = @env_vars.last || attribute_hash[:name]
-        if attribute_hash[:add_env]
-          add_env(attribute_hash[:add_env])
-        end
+        block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
+        @name ||= @env_vars.last
       end
 
       # adds environment variables to be tracked, messaged.

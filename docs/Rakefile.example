@@ -56,10 +56,19 @@
     desc "override a command-switch with environment variable"
     rototiller_task :variable_switch do |task|
       task.add_command do |cmd|
-        cmd.name = 'echo'
+        cmd.name = 'echo command_name'
         cmd.add_switch do |s|
           s.name = '--switch'
           s.add_env({:name => 'CRASH_OVERRIDE'})
+        end
+        cmd.add_option do |o|
+          o.name = '--option'
+          o.add_env({:name => 'OPT_OVERRIDE'})
+          o.add_argument do |arg|
+            arg.name = 'argument'
+            arg.add_env(:name => 'ARG_OVERRIDE', :message => 'message at the env for argument', :foo => 'this should fail')
+            arg.message = 'This is the message at the argument level'
+          end
         end
       end
     end
