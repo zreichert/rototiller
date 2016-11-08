@@ -12,6 +12,7 @@ group :system_tests do
   #gem 'beaker', :path => "../../beaker/"
   gem 'beaker'               ,'~> 2.22'
   gem 'beaker-hostgenerator'
+  gem 'public_suffix', '<= 1.4.6'
 end
 
 group :development do

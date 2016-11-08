@@ -40,6 +40,14 @@ module Rototiller
       def to_str
         [@name.to_s, @arguments.to_s].compact.join(' ')
       end
+
+      # Does this param require the task to stop
+      # Determined by the interactions between @name, @env_vars, @arguments
+      # @return [true|nil] if this param requires a stop
+      def stop
+        return true if @arguments.stop?
+        return true unless @name
+      end
     end
   end
 end

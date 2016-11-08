@@ -34,9 +34,8 @@ module Rototiller
         @arguments     = ArgumentCollection.new
 
         block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
-
-        #TODO fix logic for name / ENV
-        @name ||= @env_vars.last
+        # @name is the default unless @env_vars returns something truthy
+        (@name = @env_vars.last) if @env_vars.last
       end
 
       # adds environment variables to be tracked, messaged.
@@ -158,6 +157,14 @@ module Rototiller
           yield @result
         end
         @result
+      end
+
+      # Does this param require the task to stop
+      # Determined by the interactions between @name, @env_vars, @options, @switches, @arguments
+      # @return [true|nil] if this param requires a stop
+      def stop
+        return true if [@switches, @options, @arguments].any?{ |collection| collection.stop? }
+        return true unless @name
       end
 
       private

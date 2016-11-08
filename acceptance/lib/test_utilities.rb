@@ -26,13 +26,17 @@ module TestUtilities
     return env_var
   end
 
-  def execute_task_on(host, task_name=nil, rakefile_path=nil)
+  def execute_task_on(host, task_name=nil, rakefile_path=nil, opts={})
     step "Execute task '#{task_name}', ensure success"
     command = "bundle exec rake #{task_name}"
     command = command + " --rakefile #{rakefile_path}" if rakefile_path
     on(host, command, :accept_all_exit_codes => true) do |result|
-      assert(result.exit_code == 0, "Unexpected exit code: #{result.exit_code}")
-      assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
+      unless opts[:accept_all_exit_codes]
+        acceptable_exit_codes = opts[:acceptable_exit_codes] || 0
+        acceptable_exit_codes = [acceptable_exit_codes] unless acceptable_exit_codes.is_a?(Array)
+        assert(acceptable_exit_codes.include?(result.exit_code), "Unexpected exit code: #{result.exit_code}")
+        assert_no_match(/error/i, result.output, "An unexpected error was observed: '#{result.output}'")
+      end
       yield result if block_given?
       return result
     end

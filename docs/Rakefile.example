@@ -75,3 +75,11 @@
         end
       end
     end
+
+    desc "a command option with an argument that requires input from a user"
+    rototiller_task :option do |task|
+      task.add_command do |cmd|
+        cmd.name = 'echo command_name'
+        cmd.add_option({:name => '--option', :add_argument => {:add_env => {:name => 'OPTION_ARG'}}})
+      end
+    end

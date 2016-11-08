@@ -25,10 +25,10 @@ module Rototiller
       attr_accessor :required
       # FIXME: does (api) user need to read this directly?
       attr_reader :message_level
-      attr_reader :stop
       attr_reader :value
       attr_accessor :message
       attr_accessor :set_env
+      attr_reader :stop
 
       # Creates a new instance of EnvVar, holds information about the ENV in the environment
       # @param [Hash, Array<Hash>] args hash of information about the environment variable
@@ -43,11 +43,7 @@ module Rototiller
         block_given? ? (yield self) : send_hash_keys_as_methods_to_self(args)
 
         raise(ArgumentError, 'A name must be supplied to add_env') unless @name
-        # FIXME: create env_var truthy helper
-        # WTF does this do????
-        @required.is_a?(String) ? @required = (@required.downcase == 'true') : @required
-        @required = ( !!@required == @required ? @required : true)
-
+        @set_env ||= true
         reset
       end
 
@@ -83,32 +79,14 @@ module Rototiller
       end
       alias :to_s :to_str
 
-      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
-      def var=(var)
-        @name = var
-        reset
-      end
-
-      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
-      def default=(default)
-        @default = default
-        reset
-      end
-
-      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
-      def message=(message)
-        @user_message = message
-        reset
-      end
-
-      # If any of these variables are assigned a new value after this object's creation, reset @value and @user_message_level.
-      def required=(required)
-        @required = required
-        reset
-      end
-
-      def set_env=(set=true)
-        @set_env = set
+      # Sets the name of the EnvVar
+      # @raise [ArgumentError] if name contains an illegal character for bash environment variable
+      def name=(name)
+        name.each_char do |char|
+          message = "You have defined an environment variable with an illegal character: #{char}"
+          raise ArgumentError.new(message) unless char =~ /[a-zA-Z]|\d|_/
+        end
+        @name = name
       end
 
       private
@@ -116,6 +94,9 @@ module Rototiller
       # @private
       #TODO cleanup WTF
       def reset
+
+        (env_value_provided_by_user? || @default) ? @stop = false : @stop = true
+
         if @name
           @value = ENV[@name] || @default
           ENV[@name] = @value if @set_env
@@ -127,22 +108,22 @@ module Rototiller
       end
 
       # @private
-      def check
+      def env_value_provided_by_user?
         # its possible that name could not be set
-        ENV.key?(@name) if @name
+        (ENV.key?(@name) if @name) ? true : false
       end
 
       # @private
       def get_message_type
         if (value.nil? || value.empty?) && !required
           MESSAGE_TYPES[:not_required]
-        elsif !@default && !check
+        elsif !@default && env_value_provided_by_user?
           # ENV is not Present and it has no default value
           MESSAGE_TYPES[:nodefault_noexist]
-        elsif check
+        elsif !env_value_provided_by_user?
           # ENV is present; may or may not have default, who cares
           MESSAGE_TYPES[:exist]
-        elsif @default && !check
+        elsif @default && env_value_provided_by_user?
           # ENV is not present and it has default value
           MESSAGE_TYPES[:default_noexist]
         end
@@ -153,7 +134,6 @@ module Rototiller
         case get_message_type
         when MESSAGE_TYPES[:nodefault_noexist]
           @message_level = :error
-          @stop = true
         when MESSAGE_TYPES[:exist], MESSAGE_TYPES[:default_noexist], MESSAGE_TYPES[:not_required]
           @message_level = :info
         else

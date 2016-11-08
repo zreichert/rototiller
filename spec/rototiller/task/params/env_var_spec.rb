@@ -36,14 +36,14 @@ module Rototiller
                 # validation
                 if (method_signature == 'with_default' && env_set == 'ENV not set')
                   @formatted_message = "\e[33mINFO: #{message_header} '#{@var_name}' is not set. Proceeding with default value: '#{@var_default}': #{@var_message}\e[0m"
-                  @expected_stop = nil
+                  @expected_stop = false
                 elsif (method_signature == 'without_default' && env_set == 'ENV not set')
                   @formatted_message = "\e[31mERROR: #{message_header} '#{@var_name}' is required: #{@var_message}\e[0m"
                   @expected_stop = true
                   #elsif (method_signature == 'without_default' && env_set == 'ENV set')
                 elsif (env_set == 'ENV set')
                   @formatted_message = "\e[32mINFO: #{message_header} '#{@var_name}' was found with value: '#{@var_env_value}': #{@var_message}\e[0m"
-                  @expected_stop = nil
+                  @expected_stop = false
                 end
 
 

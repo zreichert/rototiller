@@ -91,10 +91,13 @@ module Rototiller
       private
 
       # @private
-      # FIXME: separate out the exit stuff
       def print_messages
         puts @commands.format_messages
         puts @env_vars.format_messages
+      end
+
+      # @private
+      def stop_task?
         exit_code = 1
         exit exit_code if @env_vars.stop? || @commands.stop?
       end
@@ -102,6 +105,7 @@ module Rototiller
       # @private
       def run_task
         print_messages
+        stop_task?
         @commands.each do |command|
           puts command if @verbose
 

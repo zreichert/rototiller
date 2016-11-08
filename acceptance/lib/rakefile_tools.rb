@@ -94,7 +94,16 @@ module RakefileTools
     end
 
     def set_param(param, value)
-      "x.#{param} = '#{value}'\n"
+
+      if value
+        "x.#{param} = '#{value}'\n"
+      else
+        if value.nil?
+          "x.#{param} = nil\n"
+        else
+          "x.#{param} = #{value}\n"
+        end
+      end
     end
 
     # use as a call back to look inside nested hashes

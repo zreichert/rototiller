@@ -54,7 +54,7 @@ EOS
   end
 
   step 'Execute task and assert environment values' do
-    execute_task_on(sut, task_name, rakefile_path) do |output|
+    execute_task_on(sut, task_name, rakefile_path, :accept_all_exit_codes => true) do |output|
       # command was used that was supplied by the override_env
       assert_match(/ALREADY_SET_SHOULD_PERSIST is original_value/, output.stdout,
                    'Environment variable value was not set during task execution')

@@ -52,6 +52,13 @@ module Rototiller
         @name = @env_vars.last if @env_vars.last
       end
 
+      # Does this param require the task to stop
+      # Determined by the interactions between @name and @env_vars
+      # @return [true|nil] if this param requires a stop
+      def stop
+        true unless @name
+      end
+
       # The string representation of this Switch; the value sent by author, or overridden by any env_vars
       # @return [String] the Switch's value
       def to_str

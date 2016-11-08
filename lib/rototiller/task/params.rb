@@ -15,10 +15,6 @@ module Rototiller
         ''
       end
 
-      def stop
-        false
-      end
-
     end
 
   end

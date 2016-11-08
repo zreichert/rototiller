@@ -22,8 +22,13 @@
 
 <a name="rototiller_task:add_env"></a>
 ### #add_env
+* parent methods such as `add_command`, `add_argument`, `add_switch`, and  `add_option` can utilize the method `add_env` to add an env to a param
 * adds an arbitrary environment variable for use in the task
+* If the parent does call the `name=` method and the method `default=` is not called under `add_env` the value passed to `name=` is the default
+* If the parent does not call the `name=` method and the method `default=` is called under `add_env` the value passed to `default=` is the default
+* If the parent does not call the `name=` method and the method `name=` is called under `add_env` the task will only continue if a value is found in the environment
 * if specified with a default value, and the system environment does not have this variable set, rototiller will set it, for later use in a task or otherwise
+* Specific uses are described in [add_env reference examples](docs/env_var_example_reference.md)
 * FIXME: add a bunch more examples with messaging and default values
 
 &nbsp;
